@@ -1,0 +1,6 @@
+*.so
+
+.cscope.out
+.out.tags
+.tags
+
