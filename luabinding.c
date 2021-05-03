@@ -38,6 +38,13 @@ gd_pathfinding(lua_State *L) {
 }
 
 static int
+gd_dump(lua_State *L) {
+    HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
+    hg_dump(grid);
+    return 0;
+}
+
+static int
 gc(lua_State *L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
     hg_destroy(grid);
@@ -50,6 +57,7 @@ lmetatable(lua_State *L) {
         luaL_Reg l[] = {
             { "set", gd_set },
             { "pathfinding", gd_pathfinding },
+            { "dump", gd_dump },
             { NULL, NULL }
         };
         luaL_newlib(L, l);

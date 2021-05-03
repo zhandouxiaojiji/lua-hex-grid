@@ -11,14 +11,17 @@ typedef struct Node Node;
 typedef struct NodeFreeList NodeFreeList;
 
 struct Node {
-    // 存储下一个节点位置
+    // 在freelist中的位置
+    int cur;
+    // 下一个节点位置
     int next;
 
-    // 存储当前节点的句柄
-    int handle;
-
     // 存储节点的位置
-    float x, y;
+    int pos;
+
+    int f;
+    int g;
+    int h;
 };
 
 enum { fixed_cap = 128 };
@@ -30,8 +33,11 @@ struct NodeFreeList {
     // 节点列表指针，初始化指向 fixed，后续扩容了需要把 fixed 拷贝进新内存
     Node* data;
 
+    Node* head;
+    Node* tail;
+
     // 存储节点数量
-    int num;
+    int fill_num;
 
     // 上限，初始化为 fixed_cap
     int cap;
@@ -47,7 +53,7 @@ NODE_FL_FUNC NodeFreeList* nfl_create();
 NODE_FL_FUNC void nfl_destroy(NodeFreeList* fl);
 
 // 插入一个节点，这里的 next 是通过 grid 获取到当前的
-NODE_FL_FUNC int nfl_insert(NodeFreeList* fl, int handle, float x, float y, int next);
+NODE_FL_FUNC int nfl_insert(NodeFreeList* fl, int pos, int g, int h);
 
 // 移除
 NODE_FL_FUNC void nfl_remove(NodeFreeList* fl, int n);
