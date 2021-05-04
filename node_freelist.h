@@ -33,8 +33,8 @@ struct NodeFreeList {
     // 节点列表指针，初始化指向 fixed，后续扩容了需要把 fixed 拷贝进新内存
     Node* data;
 
-    Node* head;
-    Node* tail;
+    int head;
+    int tail;
 
     // 存储节点数量
     int fill_num;
@@ -56,10 +56,7 @@ NODE_FL_FUNC void nfl_destroy(NodeFreeList* fl);
 NODE_FL_FUNC int nfl_insert(NodeFreeList* fl, int pos, int g, int h);
 
 // 移除
-NODE_FL_FUNC void nfl_remove(NodeFreeList* fl, int n);
-
-// 返回第 n 个节点
-NODE_FL_FUNC Node* nfl_get(NodeFreeList* fl, int n);
+NODE_FL_FUNC Node* nfl_pop(NodeFreeList* fl);
 
 // 主动扩容，保证能容下 n 个元素，在 grid 模块的优化接口里调用
 NODE_FL_FUNC void nfl_reserve(NodeFreeList* fl, int n);

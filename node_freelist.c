@@ -8,8 +8,8 @@ NodeFreeList* nfl_create() {
     fl->fill_num = 0;
     fl->cap = fixed_cap;
     fl->free_element = -1;
-    fl->head = NULL;
-    fl->tail = NULL;
+    fl->head = -1;
+    fl->tail = -1;
     return fl;
 }
 
@@ -18,6 +18,13 @@ void nfl_destroy(NodeFreeList* fl) {
     if (fl->data != fl->fixed) {
         free(fl->data);
     }
+}
+
+Node* nfl_head(NodeFreeList* fl) {
+    if(fl->head < 0) {
+        return NULL;
+    }
+    return &fl->data[fl->head];
 }
 
 // 从小到大排序插入
@@ -41,49 +48,51 @@ int nfl_insert(NodeFreeList* fl, int pos, int g, int h) {
     node->cur = index;
 
     // 插入排序
-    if(!fl->head) {
+    if(fl->head < 0) {
         node->next = fl->free_element;
-        fl->head = node;
-        fl->tail = node;
+        fl->head = index;
+        fl->tail = index;
     } else {
-        Node* prev = NULL;
-        Node* cur = fl->head;
-        while(cur && cur->f < node->f) {
+        int prev = -1;
+        int cur = fl->head;
+        while(f > fl->data[cur].f) {
+            prev = cur;
             if(cur == fl->tail) {
                 break;
             }
-            prev = cur;
-            int idx = cur->next;
-            if(idx == -1) {
-                break;
+            cur = fl->data[cur].next;
+        }
+        if(prev >= 0) {
+            if(prev == fl->tail) {
+                fl->tail = index;
             }
-            cur = &fl->data[cur->next];
-        }
-        if(!prev) {
+            node->next = fl->data[prev].next;
+            fl->data[prev].next = index;
+        } else{
             // 插入到表头
-            node->next = fl->head->cur;
-            fl->head = node;
+            node->next = fl->head;
+            fl->head = index;
         }
-        node->next = prev->next;
-        prev->next = index;
+        //printf("### prev:%d, cur:%d, index:%d\n", prev, cur, index);
     }
 
     return index;
 }
 
-void nfl_remove(NodeFreeList* fl, int n) {
-    if (n >= 0 && n < fl->fill_num) {
-        Node* cur = &fl->data[n];
-        cur->next = fl->free_element;
-        fl->free_element = n;
+Node* nfl_pop(NodeFreeList* fl) {
+    if(fl->head < 0) {
+        return NULL;
     }
-}
-
-Node* nfl_get(NodeFreeList* fl, int n) {
-    if (n >= 0 && n < fl->fill_num) {
-        return &fl->data[n];
+    Node* node = nfl_head(fl);
+    if(fl->head == fl->tail) {
+        fl->head = -1;
+        fl->tail = -1;
+    } else {
+        fl->head = node->next;
     }
-    return NULL;
+    node->next = fl->free_element;
+    fl->free_element = node->cur;
+    return node;
 }
 
 void nfl_reserve(NodeFreeList* fl, int n) {

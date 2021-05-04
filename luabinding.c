@@ -8,6 +8,10 @@ extern "C" {
 #include "lauxlib.h"
 #include "hex_grid.h"
 
+#ifdef DEBUG
+#include <stdio.h>
+#endif
+
 #ifndef LUA_LIB_API
 #define LUA_LIB_API extern
 #endif
@@ -63,13 +67,10 @@ test_open_insert(lua_State* L) {
 }
 
 static int
-test_open_remove(lua_State* L) {
+test_open_pop(lua_State* L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
-    int n = 0;
-    if(lua_isinteger(L, 2)) {
-        n = lua_tointeger(L, 2);
-    }
-    nfl_remove(grid->open_list, n);
+    nfl_pop(grid->open_list);
+    return 0;
 }
 
 static int
@@ -77,14 +78,26 @@ test_open_dump(lua_State* L) {
     HexGrid* grid = luaL_checkudata(L, 1, MT_NAME);
     printf("---------------dump open_list--------------------\n");
     NodeFreeList* list = grid->open_list;
-    Node* node = list->head;
-    while(node) {
-        printf("%d ", node->pos);
-        if(node == list->tail)
-            break;
-        node = &list->data[node->next];
+    if(list->head >= 0) {
+        Node* node = &list->data[list->head];
+        int count = 0;
+        while(node) {
+            printf("(%d:%d->%d) ", node->cur, node->f, node->next);
+            if(node->cur == list->tail)
+                break;
+            node = &list->data[node->next];
+            if(count++ >1000){
+                printf("may endless");
+                break;
+            }
+        }
+        printf("\n");
+    } else {
+        printf("list empty\n");
     }
-    printf("\n-------------------------------------------------\n");
+    printf("head:%d, tail:%d\n", list->head, list->tail);
+    printf("-------------------------------------------------\n");
+    return 0;
 }
 
 #endif
@@ -98,7 +111,7 @@ lmetatable(lua_State *L) {
             { "dump", gd_dump },
 #ifdef DEBUG
             { "test_open_insert", test_open_insert },
-            { "test_open_remove", test_open_remove },
+            { "test_open_pop", test_open_pop },
             { "test_open_dump", test_open_dump },
 #endif
             { NULL, NULL }
