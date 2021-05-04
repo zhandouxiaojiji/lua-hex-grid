@@ -17,3 +17,11 @@ local map = {
 local hg = hex_grid.new(10, 5)
 hg:set(1, 1, 100)
 hg:dump()
+
+if hg.test_open_dump then
+    hg:test_open_insert(1, 1, 1)
+    --hg:insert(2, 1, 1)
+    hg:test_open_dump()
+end
+
+

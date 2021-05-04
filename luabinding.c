@@ -51,6 +51,44 @@ gc(lua_State *L) {
     return 0;
 }
 
+#ifdef DEBUG
+static int
+test_open_insert(lua_State* L) {
+    HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
+    int pos = luaL_checkinteger(L, 2);
+    int g = luaL_checkinteger(L, 3);
+    int h = luaL_checkinteger(L, 4);
+    nfl_insert(grid->open_list, pos, g, h);
+    return 0;
+}
+
+static int
+test_open_remove(lua_State* L) {
+    HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
+    int n = 0;
+    if(lua_isinteger(L, 2)) {
+        n = lua_tointeger(L, 2);
+    }
+    nfl_remove(grid->open_list, n);
+}
+
+static int
+test_open_dump(lua_State* L) {
+    HexGrid* grid = luaL_checkudata(L, 1, MT_NAME);
+    printf("---------------dump open_list--------------------\n");
+    NodeFreeList* list = grid->open_list;
+    Node* node = list->head;
+    while(node) {
+        printf("%d ", node->pos);
+        if(node == list->tail)
+            break;
+        node = &list->data[node->next];
+    }
+    printf("\n-------------------------------------------------\n");
+}
+
+#endif
+
 static int
 lmetatable(lua_State *L) {
     if (luaL_newmetatable(L, MT_NAME)) {
@@ -58,6 +96,11 @@ lmetatable(lua_State *L) {
             { "set", gd_set },
             { "pathfinding", gd_pathfinding },
             { "dump", gd_dump },
+#ifdef DEBUG
+            { "test_open_insert", test_open_insert },
+            { "test_open_remove", test_open_remove },
+            { "test_open_dump", test_open_dump },
+#endif
             { NULL, NULL }
         };
         luaL_newlib(L, l);

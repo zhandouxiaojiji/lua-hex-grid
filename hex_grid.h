@@ -18,6 +18,8 @@ struct HexGrid {
     int* blocks;
 
     int w, h;
+
+    NodeFreeList* open_list;
 };
 
 // 创建地图网格

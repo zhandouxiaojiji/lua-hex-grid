@@ -35,6 +35,8 @@ void hg_create(HexGrid* grid, int w, int h) {
     grid->blocks = (int *)malloc(w * h * sizeof(int));
     grid->w = w;
     grid->h = h;
+
+    grid->open_list = nfl_create();
     DBGprint("create grid(w:%d,h:%d)\n", w, h);
 }
 
@@ -63,7 +65,7 @@ void hg_dump(HexGrid* grid) {
                 if(obstacles > 0)
                     printf("x ");
                 else
-                    printf("· ");
+                    printf("* ");
             }
             printf("\n");
         }
