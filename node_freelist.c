@@ -14,10 +14,20 @@ NodeFreeList* nfl_create() {
 }
 
 void nfl_destroy(NodeFreeList* fl) {
-    // 如果有堆分配记得释放
     if (fl->data != fl->fixed) {
         free(fl->data);
     }
+    free(fl);
+}
+
+void nfl_clear(NodeFreeList* fl) {
+    for(int i = 0; i< fl->fill_num; ++i) {
+        fl->data[i].next = -1;
+    }
+    fl->head = -1;
+    fl->tail = -1;
+    fl->free_element = -1;
+    fl->fill_num = 0;
 }
 
 Node* nfl_head(NodeFreeList* fl) {

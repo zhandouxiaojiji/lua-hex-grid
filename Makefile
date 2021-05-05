@@ -1,7 +1,7 @@
 .PHONY: all test clean debug hex_grid
 	all: grid
 
-CFLAGS= -g3 -std=c99 -O0 -rdynamic -Wall -fPIC -shared -Wno-missing-braces
+CFLAGS= -g3 -std=c99 -O0 -rdynamic -Wall -fPIC -shared
 
 hex_grid: hex_grid.so
 hex_grid.so: luabinding.c hex_grid.c node_freelist.c intlist.c

@@ -16,8 +16,6 @@ extern "C" {
 #define LUA_LIB_API extern
 #endif
 
-static IntList out_put;
-
 #define MT_NAME ("_hg_metatable")
 
 static int
@@ -58,26 +56,23 @@ gc(lua_State *L) {
 #ifdef DEBUG
 static int
 test_open_insert(lua_State* L) {
-    HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
-    int pos = luaL_checkinteger(L, 2);
-    int g = luaL_checkinteger(L, 3);
-    int h = luaL_checkinteger(L, 4);
-    nfl_insert(grid->open_list, pos, g, h);
+    int pos = luaL_checkinteger(L, 1);
+    int g = luaL_checkinteger(L, 2);
+    int h = luaL_checkinteger(L, 3);
+    nfl_insert(hg_get_open_list(), pos, g, h);
     return 0;
 }
 
 static int
 test_open_pop(lua_State* L) {
-    HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
-    nfl_pop(grid->open_list);
+    nfl_pop(hg_get_open_list());
     return 0;
 }
 
 static int
 test_open_dump(lua_State* L) {
-    HexGrid* grid = luaL_checkudata(L, 1, MT_NAME);
     printf("---------------dump open_list--------------------\n");
-    NodeFreeList* list = grid->open_list;
+    NodeFreeList* list = hg_get_open_list();
     if(list->head >= 0) {
         Node* node = &list->data[list->head];
         int count = 0;
@@ -143,7 +138,7 @@ lnew(lua_State *L) {
 
 LUA_LIB_API int
 luaopen_hex_grid(lua_State* L) {
-    il_create(&out_put, 1);
+    hg_init();
     luaL_checkversion(L);
     luaL_Reg l[] = {
         { "new", lnew },

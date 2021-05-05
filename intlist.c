@@ -3,12 +3,14 @@
 #include <string.h>
 #include <assert.h>
 
-void il_create(IntList* il, int num_fields) {
+IntList* il_create(int num_fields) {
+    IntList* il = (IntList*)malloc(sizeof(IntList));
     il->data = il->fixed;
     il->num = 0;
     il->cap = il_fixed_cap;
     il->num_fields = num_fields;
     il->free_element = -1;
+    return il;
 }
 
 void il_destroy(IntList* il) {
@@ -16,6 +18,7 @@ void il_destroy(IntList* il) {
     if (il->data != il->fixed) {
         free(il->data);
     }
+    free(il);
 }
 
 void il_clear(IntList* il) {

@@ -1,6 +1,7 @@
 #ifndef HEX_GRID_H
 #define HEX_GRID_H
 
+#include <stddef.h>
 #include "intlist.h"
 #include "node_freelist.h"
 
@@ -18,9 +19,10 @@ struct HexGrid {
     int* blocks;
 
     int w, h;
-
-    NodeFreeList* open_list;
 };
+
+
+HEX_GRID_FUNC void hg_init();
 
 // 创建地图网格
 HEX_GRID_FUNC void hg_create(HexGrid* grid, int w, int h);
@@ -36,5 +38,8 @@ HEX_GRID_FUNC void hg_set(HexGrid* grid, int x, int y, int obstacles);
 HEX_GRID_FUNC void hg_pathfinding(HexGrid* grid, int x1, int y1, int x2, int y2);
 
 HEX_GRID_FUNC void hg_dump(HexGrid* grid);
+
+HEX_GRID_FUNC NodeFreeList* hg_get_open_list();
+HEX_GRID_FUNC IntList* hg_get_close_list();
 
 #endif

@@ -10,6 +10,17 @@
     #define DBGprint(fmt, args...)
 #endif
 
+static IntList* close_list = NULL;
+static NodeFreeList* open_list = NULL;
+
+NodeFreeList* hg_get_open_list() {
+    return open_list;
+}
+
+IntList* hg_get_close_list() {
+    return close_list;
+}
+
 // 32 位整数取较小值
 static int min_int(int a, int b) {
     a -= b;
@@ -31,12 +42,16 @@ static int to_block_pos(int x, int y, int w, int h) {
     return x + y * w;
 }
 
+void hg_init() {
+    open_list = nfl_create();
+    close_list = il_create(1);
+}
+
 void hg_create(HexGrid* grid, int w, int h) {
     grid->blocks = (int *)malloc(w * h * sizeof(int));
     grid->w = w;
     grid->h = h;
 
-    grid->open_list = nfl_create();
     DBGprint("create grid(w:%d,h:%d)\n", w, h);
 }
 
