@@ -43,10 +43,10 @@ local function find(x1, y1, x2, y2)
     local path = hg:pathfinding(x1, y1, x2, y2)
     print(string.format("----------- find path: (%d, %d) => (%d, %d) ------------", x1, y1, x2, y2))
     for _, v in pairs(path or {}) do
-        print(string.format("(%s, %s)", path))
+        print(string.format("(%s, %s)", v[1], v[2]))
     end
     print("----------------------------------------------------")
 end
 
-find(0, 0, 5, 5)
+find(0, 0, 5, 3)
 

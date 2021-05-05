@@ -35,7 +35,7 @@ HEX_GRID_FUNC void hg_destroy(HexGrid* grid);
 // obstacles = 0xfffff 则是全部单位不可通行
 HEX_GRID_FUNC void hg_set(HexGrid* grid, int x, int y, int obstacles);
 
-HEX_GRID_FUNC void hg_pathfinding(HexGrid* grid, int x1, int y1, int x2, int y2);
+HEX_GRID_FUNC IntList* hg_pathfinding(HexGrid* grid, int x1, int y1, int x2, int y2);
 
 HEX_GRID_FUNC void hg_dump(HexGrid* grid);
 

@@ -35,8 +35,19 @@ gd_pathfinding(lua_State *L) {
     int y1 = luaL_checkinteger(L, 3);
     int x2 = luaL_checkinteger(L, 4);
     int y2 = luaL_checkinteger(L, 5);
-    hg_pathfinding(grid, x1, y1, x2, y2);
-    return 0;
+    IntList* path = hg_pathfinding(grid, x1, y1, x2, y2);
+
+    lua_newtable(L);
+    for (int i = 0; i < il_size(path); ++i) {
+        lua_newtable(L);
+        int pos = il_get(path, i, 0);
+        lua_pushinteger(L, pos % grid->w);
+        lua_rawseti(L, -2, 1);
+        lua_pushinteger(L, pos / grid->w);
+        lua_rawseti(L, -2, 2);
+        lua_rawseti(L, -2, i+1);
+    }
+    return 1;
 }
 
 static int
