@@ -48,6 +48,11 @@ static int to_block_pos(int x, int y, int w, int h) {
     return x + y * w;
 }
 
+static inline int walkable(HexGrid* grid, int camp, int pos) {
+    int block = grid->blocks[pos];
+    return block == 0 || block == camp;
+}
+
 void hg_init() {
     open_list = nfl_create();
     close_list = il_create(1);
@@ -66,17 +71,20 @@ void hg_destroy(HexGrid* grid) {
     free(grid->blocks);
 }
 
-void hg_set(HexGrid* grid, int x, int y, int obstacles) {
-    DBGprint("set (%d, %d) = %d\n", x, y, obstacles);
+void hg_set(HexGrid* grid, int x, int y, int obstacle) {
+    DBGprint("set (%d, %d) = %d\n", x, y, obstacle);
     int idx = to_block_pos(x, y, grid->w, grid->h);
-    grid->blocks[idx] = obstacles;
+    grid->blocks[idx] = obstacle;
 }
 
-IntList* hg_pathfinding(HexGrid* grid, int x1, int y1, int x2, int y2) {
-    DBGprint("pathfinding (%d, %d) => (%d, %d)\n", x1, y1, x2, y2);
+IntList* hg_pathfinding(HexGrid* grid, int x1, int y1, int x2, int y2, int camp) {
+    //DBGprint("pathfinding (%d, %d) => (%d, %d)\n", x1, y1, x2, y2);
     int start = to_block_pos(x1, y1, grid->w, grid->h);
     int end = to_block_pos(x2, y2, grid->w, grid->h);
     il_clear(path);
+    if(!walkable(grid, camp, start) || !walkable(grid, camp, end)) {
+        return path;
+    }
     add_to_path(start);
     add_to_path(end);
     if(start == end) {

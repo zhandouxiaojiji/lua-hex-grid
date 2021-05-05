@@ -23,8 +23,11 @@ gd_set(lua_State *L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
     int x = luaL_checkinteger(L, 2);
     int y = luaL_checkinteger(L, 3);
-    int obstacles = luaL_checkinteger(L, 4);
-    hg_set(grid, x, y, obstacles);
+    int obstacle = DEFAULT_OBSTACLE;
+    if(lua_isinteger(L, 4)) {
+        obstacle = luaL_checkinteger(L, 4);
+    }
+    hg_set(grid, x, y, obstacle);
     return 0;
 }
 
@@ -35,7 +38,15 @@ gd_pathfinding(lua_State *L) {
     int y1 = luaL_checkinteger(L, 3);
     int x2 = luaL_checkinteger(L, 4);
     int y2 = luaL_checkinteger(L, 5);
-    IntList* path = hg_pathfinding(grid, x1, y1, x2, y2);
+    int camp = DEFAULT_CAMP;
+    if(lua_isinteger(L, 6)) {
+        camp = luaL_checkinteger(L, 6);
+        if(camp <= 0) {
+            luaL_error(L, "camp:%d must large than 0", camp);
+            return 0;
+        }
+    }
+    IntList* path = hg_pathfinding(grid, x1, y1, x2, y2, camp);
 
     lua_newtable(L);
     for (int i = 0; i < il_size(path); ++i) {

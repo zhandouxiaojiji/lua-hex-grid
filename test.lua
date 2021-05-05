@@ -39,8 +39,8 @@ if hg.test_open_dump then
     hg.test_open_dump()
 end
 
-local function find(x1, y1, x2, y2)
-    local path = hg:pathfinding(x1, y1, x2, y2)
+local function find(x1, y1, x2, y2, camp)
+    local path = hg:pathfinding(x1, y1, x2, y2, camp)
     print(string.format("----------- find path: (%d, %d) => (%d, %d) ------------", x1, y1, x2, y2))
     for _, v in pairs(path or {}) do
         print(string.format("(%s, %s)", v[1], v[2]))
@@ -49,4 +49,5 @@ local function find(x1, y1, x2, y2)
 end
 
 find(0, 0, 5, 3)
+find(0, 0, 1, 1)
 

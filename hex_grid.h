@@ -11,6 +11,9 @@
 #define HEX_GRID_FUNC
 #endif
 
+#define DEFAULT_OBSTACLE -1
+#define DEFAULT_CAMP -2
+
 typedef struct HexGrid HexGrid;
 
 // 整个网格
@@ -31,11 +34,11 @@ HEX_GRID_FUNC void hg_create(HexGrid* grid, int w, int h);
 HEX_GRID_FUNC void hg_destroy(HexGrid* grid);
 
 // 设置障碍
-// camp & obstacles > 0 表示不可通行
-// obstacles = 0xfffff 则是全部单位不可通行
-HEX_GRID_FUNC void hg_set(HexGrid* grid, int x, int y, int obstacles);
+// obstacle: -1 所有单位不可通行
+// camp == obstacle || obstacle == 0 可通行
+HEX_GRID_FUNC void hg_set(HexGrid* grid, int x, int y, int obs);
 
-HEX_GRID_FUNC IntList* hg_pathfinding(HexGrid* grid, int x1, int y1, int x2, int y2);
+HEX_GRID_FUNC IntList* hg_pathfinding(HexGrid* grid, int x1, int y1, int x2, int y2, int camp);
 
 HEX_GRID_FUNC void hg_dump(HexGrid* grid);
 
