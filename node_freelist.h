@@ -60,6 +60,8 @@ NODE_FL_FUNC Node* nfl_pop(NodeFreeList* fl);
 
 NODE_FL_FUNC Node* nfl_head(NodeFreeList* fl);
 
+NODE_FL_FUNC void nfl_clear(NodeFreeList* fl);
+
 // 主动扩容，保证能容下 n 个元素，在 grid 模块的优化接口里调用
 NODE_FL_FUNC void nfl_reserve(NodeFreeList* fl, int n);
 

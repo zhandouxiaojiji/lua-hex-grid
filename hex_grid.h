@@ -25,6 +25,7 @@ struct HexBlock {
     int x;        // cube x
     int y;        // cube y
     int z;        // cube z
+    int prev_idx; // 上一个跳点
     unsigned char dirs; // 检索方向
 };
 
