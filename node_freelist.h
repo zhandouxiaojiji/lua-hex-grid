@@ -61,4 +61,9 @@ NODE_FL_FUNC Node* nfl_pop(NodeFreeList* fl);
 // 主动扩容，保证能容下 n 个元素，在 grid 模块的优化接口里调用
 NODE_FL_FUNC void nfl_reserve(NodeFreeList* fl, int n);
 
+NODE_FL_FUNC int nfl_is_empty(NodeFreeList* fl);
+
+#define idx2x(idx, w) idx % w
+#define idx2y(idx, w) idx / w
+
 #endif

@@ -30,6 +30,10 @@ void nfl_clear(NodeFreeList* fl) {
     fl->fill_num = 0;
 }
 
+int nfl_is_empty(NodeFreeList* fl) {
+    return fl->head == -1;
+}
+
 Node* nfl_head(NodeFreeList* fl) {
     if(fl->head < 0) {
         return NULL;
