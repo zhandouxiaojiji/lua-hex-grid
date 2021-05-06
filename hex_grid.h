@@ -15,13 +15,32 @@
 #define DEFAULT_CAMP -2
 
 typedef struct HexGrid HexGrid;
+typedef struct HexBlock HexBlock;
+
+struct HexBlock {
+    int obstacle; // 障碍标识: 0可通行 -1所有单位不可通行 大于0指定阵营单位可通行
+    int idx;      // blocks index
+    int col;      // offset col
+    int row;      // offset row
+    int x;        // cube x
+    int y;        // cube y
+    int z;        // cube z
+    unsigned char dirs; // 检索方向
+};
 
 // 整个网格
 struct HexGrid {
     // 所有格子
-    int* blocks;
+    HexBlock** blocks;
 
     int w, h;
+
+    HexBlock* sb;
+    HexBlock* eb;
+
+    NodeFreeList* open_list;
+    IntList* dirty_list;
+    IntList* path;
 };
 
 

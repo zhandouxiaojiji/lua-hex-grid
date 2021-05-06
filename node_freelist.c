@@ -42,7 +42,7 @@ Node* nfl_head(NodeFreeList* fl) {
 }
 
 // 从小到大排序插入
-int nfl_insert(NodeFreeList* fl, int pos, int g, int h) {
+int nfl_insert(NodeFreeList* fl, int idx, int g, int h) {
     int index;
     if (fl->free_element != -1) {
         index = fl->free_element;
@@ -55,7 +55,7 @@ int nfl_insert(NodeFreeList* fl, int pos, int g, int h) {
     }
     int f = g + h;
     Node* node = &fl->data[index];
-    node->pos = pos;
+    node->idx = idx;
     node->h = h;
     node->g = g;
     node->f = f;
@@ -107,6 +107,10 @@ Node* nfl_pop(NodeFreeList* fl) {
     node->next = fl->free_element;
     fl->free_element = node->cur;
     return node;
+}
+
+Node* nfl_get_top(NodeFreeList* fl) {
+    return &fl->data[fl->head];
 }
 
 void nfl_reserve(NodeFreeList* fl, int n) {

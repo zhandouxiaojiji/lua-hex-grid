@@ -10,16 +10,31 @@
     #define DBGprint(fmt, args...)
 #endif
 
-static IntList* close_list = NULL;
-static NodeFreeList* open_list = NULL;
-static IntList* path = NULL;
+// N, NE, E, SE, S, SW, W, NW
+/*
+    1    2
+     \  /
+  0 --  -- 3
+     /  \
+    5    4
+*/
+#define NO_DIRECTION 6
+#define FULL_DIRECTIONSET 63
+#define EMPTY_DIRECTIONSET 0
 
-NodeFreeList* hg_get_open_list() {
-    return open_list;
-}
+#define DIR_W  0
+#define DIR_NW 1
+#define DIR_NE 2
+#define DIR_E  3
+#define DIR_SE 4
+#define DIR_SW 5
 
-IntList* hg_get_close_list() {
-    return close_list;
+#define idx2col(idx, w) idx % w
+#define idx2row(idx, w) idx / w
+#define is_close(block) block->dirs == FULL_DIRECTIONSET
+
+NodeFreeList* hg_get_open_list(HexGrid* grid) {
+    return grid->open_list;
 }
 
 // 32 位整数取较小值
@@ -36,51 +51,69 @@ static int max_int(int a, int b) {
     return a + b;
 }
 
-static void add_to_path(int pos) {
-    int i = il_push_back(path);
-    il_set(path, i, 0, pos);
+static void dir_add(unsigned char *dirs, unsigned char dir){
+    *dirs |= (1 << dir);
 }
 
-// 计算一行或者一列内的网格索引
-static int to_block_pos(int x, int y, int w, int h) {
-    x = min_int(w - 1, max_int(0, x));
-    y = min_int(h - 1, max_int(0, y));
-    return x + y * w;
+static inline in_dirs(unsigned char dirs, unsigned char dir) {
+    return (dirs | (1<<dir)) == dirs;
 }
 
-static inline int walkable(HexGrid* grid, int camp, int pos) {
-    int block = grid->blocks[pos];
-    return block == 0 || block == camp;
+static void add_to_path(HexGrid* grid, HexBlock* block) {
+    int i = il_push_back(grid->path);
+    il_set(grid->path, i, 0, block->idx);
 }
 
-static inline void idx2cube(HexGrid* grid, int idx, int* x, int* y, int* z) {
-    int col = idx2x(idx, grid->w);
-    int row = idx2y(idx, grid->w);
-    *x = col - (row + (row&1)) / 2;
-    *z = row;
-    *y = -(*x)-(*z);
+static void set_dir(HexGrid* grid, HexBlock* block, int dir) {
+    int i = il_push_back(grid->dirty_list);
+    il_set(grid->dirty_list, i, 0, block->idx);
+    block->dirs |= (1<<dir);
 }
 
-static int calc_h(HexGrid* grid, int from, int to) {
-    int x1, y1, z1, x2, y2, z2;
-    idx2cube(grid, from, &x1, &y1, &z1);
-    idx2cube(grid, to, &x2, &y2, &z2);
-    return max_int(max_int(abs(x1-x2), abs(y1-y2)), abs(z1-z2));
+static inline int is_in_grid(HexGrid* grid, int col, int row) {
+    return col < 0 || col >= grid->w || row < 0 || row >= grid->h;
+}
+
+static HexBlock* get_block_by_offset(HexGrid* grid, int col, int row) {
+    col = min_int(grid->w - 1, max_int(0, col));
+    row = min_int(grid->h - 1, max_int(0, row));
+    return grid->blocks[col + row * grid->w];
+}
+
+static inline int walkable(HexBlock* block, int camp) {
+    return block->obstacle == 0 || block->obstacle == camp;
+}
+
+static int calc_h(HexBlock* from, HexBlock* to) {
+    return max_int(max_int(abs(from->x - to->x), abs(from->y - to->y)), abs(from->z - to->z));
 }
 
 void hg_init() {
-    open_list = nfl_create();
-    close_list = il_create(1);
-    path = il_create(1);
+
 }
 
 void hg_create(HexGrid* grid, int w, int h) {
-    int blocks_size = w * h * sizeof(int);
-    grid->blocks = (int *)malloc(blocks_size);
-    memset(grid->blocks, 0, blocks_size);
+    int count = w * h;
+    grid->blocks = malloc(count * sizeof(HexBlock*));
+
+    for(int i = 0; i < count; ++i) {
+        HexBlock* block = (HexBlock*)malloc(sizeof(HexBlock));
+        block->obstacle = 0;
+        block->idx = i;
+        block->col = idx2col(i, w);
+        block->row = idx2row(i, w);
+        block->x = block->col - (block->row + ( block->row & 1)) / 2;
+        block->z = block->row;
+        block->y = -block->x - block->z;
+        grid->blocks[i] = block;
+    }
 
     grid->w = w;
     grid->h = h;
+
+    grid->open_list = nfl_create();
+    grid->dirty_list = il_create(1);
+    grid->path = il_create(1);
 
     DBGprint("create grid(w:%d,h:%d)\n", w, h);
 }
@@ -91,27 +124,73 @@ void hg_destroy(HexGrid* grid) {
 
 void hg_set(HexGrid* grid, int x, int y, int obstacle) {
     DBGprint("set (%d, %d) = %d\n", x, y, obstacle);
-    int idx = to_block_pos(x, y, grid->w, grid->h);
-    grid->blocks[idx] = obstacle;
+    HexBlock* block = get_block_by_offset(grid, x, y);
+    block->obstacle = obstacle;
 }
 
-IntList* hg_pathfinding(HexGrid* grid, int x1, int y1, int x2, int y2, int camp) {
+static int find_forced_neighbor(HexGrid* grid, HexBlock* block, int from_dir) {
+
+}
+
+static int find_jump_point(HexGrid* grid, HexBlock* src, int dir) {
+    return 1;
+}
+
+static int search_block(HexGrid* grid, HexBlock* block) {
+    for(int dir = 0; dir < NO_DIRECTION; ++dir) {
+        //if(!in_dirs(block->dirs, dir)) {
+        if(!in_dirs(block->dirs, dir)) {
+            set_dir(grid, block, dir);
+            if(find_jump_point(grid, block, dir)){
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+static void reset_dirs(HexGrid* grid) {
+    IntList* dirty_list = grid->dirty_list;
+    for(int i = 0; i < dirty_list->num; ++i) {
+        HexBlock* block = grid->blocks[il_get(dirty_list, i, 0)];
+        block->dirs = 0;
+    }
+    il_clear(dirty_list);
+}
+
+IntList* hg_pathfinding(HexGrid* grid, int c1, int r1, int c2, int r2, int camp) {
     //DBGprint("pathfinding (%d, %d) => (%d, %d)\n", x1, y1, x2, y2);
-    int start = to_block_pos(x1, y1, grid->w, grid->h);
-    int end = to_block_pos(x2, y2, grid->w, grid->h);
+    HexBlock* start = get_block_by_offset(grid, c1, r1);
+    HexBlock* end = get_block_by_offset(grid, c2, r2);
+    grid->sb = start;
+    grid->eb = end;
+
+    IntList* path = grid->path;
     il_clear(path);
-    if(!walkable(grid, camp, start) || !walkable(grid, camp, end)) {
+    if(!walkable(start, camp) || !walkable(end, camp)) {
         return path;
     }
-    add_to_path(start);
+    add_to_path(grid, start);
     if(start == end) {
         return path;
     }
-    nfl_insert(open_list, start, 0, calc_h(grid, start, end));
-    while(!nfl_is_empty(open_list)) {
-        Node* current = nfl_pop(open_list);
-        printf("current:%d, g:%d, h:%d\n", current->pos, current->g, current->h);
+
+    NodeFreeList* open_list = grid->open_list;
+    nfl_clear(open_list);
+    nfl_insert(open_list, start->idx, 0, calc_h(start, end));
+
+    int limit = 10;
+    while(!nfl_is_empty(open_list) && limit-- > 0) {
+        Node* node = nfl_head(open_list);
+        HexBlock* block = grid->blocks[node->idx];
+        printf("current:%d, g:%d, h:%d\n", node->idx, node->g, node->h);
+        search_block(grid, block);
+        printf("block:%d\n", block->dirs);
+        if(is_close(block)) {
+            nfl_pop(open_list);
+        }
     }
+    reset_dirs(grid);
     return path;
 }
 
@@ -122,8 +201,8 @@ void hg_dump(HexGrid* grid) {
         if(y%2!=0)
             printf(" ");
         for(int x = 0; x < w; ++x){
-            int obstacles = grid->blocks[to_block_pos(x, y, w, h)];
-            if(obstacles > 0)
+            int obstacle = grid->blocks[y * grid->w + x]->obstacle;
+            if(obstacle > 0)
                 printf("x ");
             else
                 printf("* ");

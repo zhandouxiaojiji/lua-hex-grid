@@ -17,7 +17,7 @@ struct Node {
     int next;
 
     // 存储节点的位置
-    int pos;
+    int idx;
 
     int f;
     int g;
@@ -53,17 +53,19 @@ NODE_FL_FUNC NodeFreeList* nfl_create();
 NODE_FL_FUNC void nfl_destroy(NodeFreeList* fl);
 
 // 插入一个节点，这里的 next 是通过 grid 获取到当前的
-NODE_FL_FUNC int nfl_insert(NodeFreeList* fl, int pos, int g, int h);
+NODE_FL_FUNC int nfl_insert(NodeFreeList* fl, int idx, int g, int h);
 
 // 移除
 NODE_FL_FUNC Node* nfl_pop(NodeFreeList* fl);
+
+NODE_FL_FUNC Node* nfl_head(NodeFreeList* fl);
 
 // 主动扩容，保证能容下 n 个元素，在 grid 模块的优化接口里调用
 NODE_FL_FUNC void nfl_reserve(NodeFreeList* fl, int n);
 
 NODE_FL_FUNC int nfl_is_empty(NodeFreeList* fl);
 
-#define idx2x(idx, w) idx % w
-#define idx2y(idx, w) idx / w
+#define idx2row(idx, w) idx / w
+#define idx2col(idx, w) idx % w
 
 #endif

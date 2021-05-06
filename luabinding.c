@@ -51,10 +51,10 @@ gd_pathfinding(lua_State *L) {
     lua_newtable(L);
     for (int i = 0; i < il_size(path); ++i) {
         lua_newtable(L);
-        int pos = il_get(path, i, 0);
-        lua_pushinteger(L, pos % grid->w);
+        int idx = il_get(path, i, 0);
+        lua_pushinteger(L, idx % grid->w);
         lua_rawseti(L, -2, 1);
-        lua_pushinteger(L, pos / grid->w);
+        lua_pushinteger(L, idx / grid->w);
         lua_rawseti(L, -2, 2);
         lua_rawseti(L, -2, i+1);
     }
@@ -78,23 +78,26 @@ gc(lua_State *L) {
 #ifdef DEBUG
 static int
 test_open_insert(lua_State* L) {
-    int pos = luaL_checkinteger(L, 1);
-    int g = luaL_checkinteger(L, 2);
-    int h = luaL_checkinteger(L, 3);
-    nfl_insert(hg_get_open_list(), pos, g, h);
+    HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
+    int idx = luaL_checkinteger(L, 2);
+    int g = luaL_checkinteger(L, 3);
+    int h = luaL_checkinteger(L, 4);
+    nfl_insert(hg_get_open_list(grid), idx, g, h);
     return 0;
 }
 
 static int
 test_open_pop(lua_State* L) {
-    nfl_pop(hg_get_open_list());
+    HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
+    nfl_pop(hg_get_open_list(grid));
     return 0;
 }
 
 static int
 test_open_dump(lua_State* L) {
+    HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
     printf("---------------dump open_list--------------------\n");
-    NodeFreeList* list = hg_get_open_list();
+    NodeFreeList* list = hg_get_open_list(grid);
     if(list->head >= 0) {
         Node* node = &list->data[list->head];
         int count = 0;
