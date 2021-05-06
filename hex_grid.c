@@ -55,7 +55,7 @@ static void dir_add(unsigned char *dirs, unsigned char dir){
     *dirs |= (1 << dir);
 }
 
-static inline in_dirs(unsigned char dirs, unsigned char dir) {
+static inline int in_dirs(unsigned char dirs, unsigned char dir) {
     return (dirs | (1<<dir)) == dirs;
 }
 
@@ -128,20 +128,49 @@ void hg_set(HexGrid* grid, int x, int y, int obstacle) {
     block->obstacle = obstacle;
 }
 
+static HexBlock* get_neighbor(HexGrid* grid, HexBlock* block, int dir) {
+    int col = block->col;
+    int row = block->row;
+    if(dir == DIR_E){
+        col++;
+    } else if (dir == DIR_W) {
+        col--;
+    } else if (dir == DIR_NE) {
+        col++;
+        row--;
+    } else if (dir == DIR_NW) {
+        row--;
+    } else if (dir == DIR_SE) {
+        col++;
+        row++;
+    } else if(dir == DIR_SW) {
+        row++;
+    }
+    if(is_in_grid(grid, col, row)) {
+        return grid->blocks[col + row * grid->w];
+    } else {
+        return NULL;
+    }
+}
+
 static int find_forced_neighbor(HexGrid* grid, HexBlock* block, int from_dir) {
 
 }
 
-static int find_jump_point(HexGrid* grid, HexBlock* src, int dir) {
+static int find_jump_point(HexGrid* grid, HexBlock* src, int dir, int g) {
+    HexBlock* next = get_neighbor(grid, src, dir);
+    if(!next) {
+        return 0;
+    }
+
     return 1;
 }
 
-static int search_block(HexGrid* grid, HexBlock* block) {
+static int search_block(HexGrid* grid, HexBlock* block, int g) {
     for(int dir = 0; dir < NO_DIRECTION; ++dir) {
-        //if(!in_dirs(block->dirs, dir)) {
         if(!in_dirs(block->dirs, dir)) {
             set_dir(grid, block, dir);
-            if(find_jump_point(grid, block, dir)){
+            if(find_jump_point(grid, block, dir, g)){
                 return 1;
             }
         }
@@ -184,8 +213,7 @@ IntList* hg_pathfinding(HexGrid* grid, int c1, int r1, int c2, int r2, int camp)
         Node* node = nfl_head(open_list);
         HexBlock* block = grid->blocks[node->idx];
         printf("current:%d, g:%d, h:%d\n", node->idx, node->g, node->h);
-        search_block(grid, block);
-        printf("block:%d\n", block->dirs);
+        search_block(grid, block, node->g);
         if(is_close(block)) {
             nfl_pop(open_list);
         }
