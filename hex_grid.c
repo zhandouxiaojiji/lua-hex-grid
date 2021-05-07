@@ -261,20 +261,18 @@ IntList* hg_pathfinding(HexGrid* grid, int c1, int r1, int c2, int r2, int camp)
         if(block == end) {
             break;
         }
-        //printf("current: (%d %d), g:%d, h:%d\n", node->idx % grid->w, node->idx / grid->w, node->g, node->h);
+        //printf("current: (%d %d), g:%d, h:%d, f:%d\n", node->idx % grid->w, node->idx / grid->w, node->g, node->h, node->f);
         for(int dir = 0; dir < NO_DIRECTION; ++dir) {
             if(!in_dirs(block->dirs, dir)) {
                 add_dir(grid, block, dir);
+                if(is_close(block)) {
+                    nfl_remove(grid->open_list, node);
+                    //printf("## close block(%d %d)\n", block->col, block->row);
+                }
                 if(find_jump_point(grid, block, dir, node->g, camp)){
-                    if(is_close(block)) {
-                        nfl_pop(grid->open_list);
-                    }
                     continue;
                 }
             }
-        }
-        if(is_close(block)) {
-            nfl_pop(grid->open_list);
         }
 
         for(int dir = 0; dir < NO_DIRECTION; ++dir) {

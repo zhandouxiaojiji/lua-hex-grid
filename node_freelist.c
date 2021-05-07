@@ -69,6 +69,7 @@ int nfl_insert(NodeFreeList* fl, int idx, int g, int h) {
     } else {
         int prev = -1;
         int cur = fl->head;
+        //while(f > fl->data[cur].f || (f == fl->data[cur].f && h > fl->data[cur].h)) {
         while(f > fl->data[cur].f) {
             prev = cur;
             if(cur == fl->tail) {
@@ -107,6 +108,37 @@ Node* nfl_pop(NodeFreeList* fl) {
     node->next = fl->free_element;
     fl->free_element = node->cur;
     return node;
+}
+
+void nfl_remove(NodeFreeList* fl, Node* dst) {
+    Node* node = nfl_head(fl);
+    // 删除head
+    if(node == dst){
+        nfl_pop(fl);
+        return;
+    }
+    int prev = -1;
+    while(node) {
+        if(node->cur == fl->tail) {
+            // 删除tail
+            if(prev >= 0) {
+                fl->tail = prev;
+            }
+            break;
+        }
+        if(node == dst) {
+            fl->data[prev].next = dst->next;
+            break;
+        }
+        prev = node->cur;
+        if(node->next < 0)
+            break;
+        node = &fl->data[node->next];
+    }
+
+    dst->next = fl->free_element;
+    fl->free_element = dst->cur;
+
 }
 
 Node* nfl_get_top(NodeFreeList* fl) {

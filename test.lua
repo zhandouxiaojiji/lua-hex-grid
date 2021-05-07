@@ -15,6 +15,7 @@ local map = {
 }
 
 local hg = hex_grid.new(10, 5)
+hg:set(1, 0, 100)
 hg:set(1, 1, 100)
 hg:set(1, 2, 100)
 hg:set(1, 3, 100)
@@ -52,10 +53,10 @@ local function find(x1, y1, x2, y2, camp)
     print("----------------------------------------------------")
 end
 
---find(0, 0, 2, 2)
---find(0, 0, 5, 3)
+find(0, 0, 2, 2)
+find(0, 0, 5, 3)
 find(5, 3, 0, 0)
-find(5, 3, 0, 0)
+find(5, 3, 2, 3)
 find(0, 0, 1, 1)
 find(0, 0, 0, 0)
 

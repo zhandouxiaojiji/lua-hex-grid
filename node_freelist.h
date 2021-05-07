@@ -57,6 +57,7 @@ NODE_FL_FUNC int nfl_insert(NodeFreeList* fl, int idx, int g, int h);
 
 // 移除
 NODE_FL_FUNC Node* nfl_pop(NodeFreeList* fl);
+NODE_FL_FUNC void nfl_remove(NodeFreeList* fl, Node* dst);
 
 NODE_FL_FUNC Node* nfl_head(NodeFreeList* fl);
 
