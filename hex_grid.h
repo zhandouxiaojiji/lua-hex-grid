@@ -27,6 +27,7 @@ struct HexBlock {
     int z;        // cube z
     int prev_idx; // 上一个跳点
     unsigned char dirs; // 检索方向
+    unsigned char isopen;
 };
 
 // 整个网格
@@ -41,7 +42,6 @@ struct HexGrid {
 
     NodeFreeList* open_list;
     IntList* dirty_list;
-    IntList* path;
 };
 
 

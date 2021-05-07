@@ -16,8 +16,11 @@ local map = {
 
 local hg = hex_grid.new(10, 5)
 hg:set(1, 1, 100)
+hg:set(1, 2, 100)
+hg:set(1, 3, 100)
 hg:dump()
 
+--[[
 if hg.test_open_dump then
     hg:test_open_insert(1, 1, 1)
     hg:test_open_dump()
@@ -38,6 +41,7 @@ if hg.test_open_dump then
     hg:test_open_insert(6, 9, 1)
     hg:test_open_dump()
 end
+]]
 
 local function find(x1, y1, x2, y2, camp)
     local path = hg:pathfinding(x1, y1, x2, y2, camp)
@@ -48,7 +52,10 @@ local function find(x1, y1, x2, y2, camp)
     print("----------------------------------------------------")
 end
 
-find(0, 0, 5, 3)
+--find(0, 0, 2, 2)
+--find(0, 0, 5, 3)
+find(5, 3, 0, 0)
+find(5, 3, 0, 0)
 find(0, 0, 1, 1)
 find(0, 0, 0, 0)
 

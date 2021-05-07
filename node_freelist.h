@@ -67,7 +67,4 @@ NODE_FL_FUNC void nfl_reserve(NodeFreeList* fl, int n);
 
 NODE_FL_FUNC int nfl_is_empty(NodeFreeList* fl);
 
-#define idx2row(idx, w) idx / w
-#define idx2col(idx, w) idx % w
-
 #endif
