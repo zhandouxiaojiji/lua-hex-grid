@@ -1,5 +1,5 @@
 local hex_grid = require "hex_grid"
-local map = require "sample_map"
+local map = require "test.sample_map"
 
 local hg = hex_grid.new(map.w, map.h)
 for _, v in pairs(map.blocks) do

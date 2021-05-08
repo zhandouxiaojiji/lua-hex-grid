@@ -10,7 +10,7 @@ hex_grid.so: luabinding.c hex_grid.c node_freelist.c intlist.c
 	    gcc $(CFLAGS) -o $@ $^
 
 test:
-	lua test.lua
+	lua test/test.lua
 
 clean:
 	rm -f *.so
