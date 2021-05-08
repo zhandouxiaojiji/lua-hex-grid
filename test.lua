@@ -1,24 +1,12 @@
-
 local hex_grid = require "hex_grid"
+local map = require "sample_map"
 
-local data = [[
-* * * * * *
- * * * * * *
-* @ @ @ * *
- * * * @ * *
-* * * * * *
-]]
-
-local map = {
-    w = 10,
-    h = 5,
-}
-
-local hg = hex_grid.new(10, 5)
-hg:set(1, 0, 100)
-hg:set(1, 1, 100)
-hg:set(1, 2, 100)
-hg:set(1, 3, 100)
+local hg = hex_grid.new(map.w, map.h)
+for _, v in pairs(map.blocks) do
+    if v.obstacle then
+        hg:set(v.col, v.row, -1)
+    end
+end
 hg:dump()
 
 --[[
