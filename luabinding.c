@@ -95,7 +95,7 @@ test_open_pop(lua_State* L) {
 
 static int
 test_open_dump(lua_State* L) {
-    HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
+    HexGrid* grid = luaL_checkudata(L, 1, MT_NAME);
     printf("---------------dump open_list--------------------\n");
     NodeFreeList* list = hg_get_open_list(grid);
     if(list->head >= 0) {
@@ -120,6 +120,13 @@ test_open_dump(lua_State* L) {
     return 0;
 }
 
+static int
+test_destroy(lua_State* L) {
+    HexGrid* grid = luaL_checkudata(L, 1, MT_NAME);
+    hg_destroy(grid);
+    return 0;
+}
+
 #endif
 
 static int
@@ -130,6 +137,7 @@ lmetatable(lua_State *L) {
             { "pathfinding", gd_pathfinding },
             { "dump", gd_dump },
 #ifdef DEBUG
+            { "test_destroy", test_destroy },
             { "test_open_insert", test_open_insert },
             { "test_open_pop", test_open_pop },
             { "test_open_dump", test_open_dump },

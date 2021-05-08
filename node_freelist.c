@@ -2,22 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-NodeFreeList* nfl_create() {
-    NodeFreeList* fl = (NodeFreeList *)malloc(sizeof(NodeFreeList));
+void nfl_init(NodeFreeList* fl) {
     fl->data = fl->fixed;
     fl->fill_num = 0;
     fl->cap = fixed_cap;
     fl->free_element = -1;
     fl->head = -1;
     fl->tail = -1;
-    return fl;
 }
 
 void nfl_destroy(NodeFreeList* fl) {
     if (fl->data != fl->fixed) {
         free(fl->data);
     }
-    free(fl);
 }
 
 void nfl_clear(NodeFreeList* fl) {

@@ -115,7 +115,8 @@ static inline int unwalkable(HexBlock* block, int camp) {
 }
 
 void hg_init() {
-    path = il_create(1);
+    path = (IntList*)malloc(sizeof(IntList));
+    il_init(path, 1);
 }
 
 void hg_create(HexGrid* grid, int w, int h) {
@@ -142,14 +143,26 @@ void hg_create(HexGrid* grid, int w, int h) {
     grid->sb = NULL;
     grid->eb = NULL;
 
-    grid->open_list = nfl_create();
-    grid->dirty_list = il_create(1);
+    grid->open_list = (NodeFreeList *)malloc(sizeof(NodeFreeList));
+    nfl_init(grid->open_list);
+
+    grid->dirty_list = (IntList*)malloc(sizeof(IntList));
+    il_init(grid->dirty_list, 1);
 
     DBGprint("create grid(w:%d,h:%d)\n", w, h);
 }
 
 void hg_destroy(HexGrid* grid) {
+    for(int i = 0; i < grid->w * grid->h; ++i) {
+        free(grid->blocks[i]);
+    }
     free(grid->blocks);
+
+    nfl_destroy(grid->open_list);
+    free(grid->open_list);
+
+    il_destroy(grid->dirty_list);
+    free(grid->dirty_list);
 }
 
 void hg_set(HexGrid* grid, int x, int y, int obstacle) {

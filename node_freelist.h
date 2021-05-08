@@ -47,7 +47,7 @@ struct NodeFreeList {
 };
 
 // 创建
-NODE_FL_FUNC NodeFreeList* nfl_create();
+NODE_FL_FUNC void nfl_init(NodeFreeList* fl);
 
 // 销毁，会释放内存
 NODE_FL_FUNC void nfl_destroy(NodeFreeList* fl);

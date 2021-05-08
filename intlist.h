@@ -38,7 +38,7 @@ struct IntList {
 // il_size 函数在 freelist 模式下不能获得正确的数量
 
 // 创建，指定每个元素所占用的数域个数
-IL_FUNC IntList* il_create(int num_fields);
+IL_FUNC void il_init(IntList* il, int num_fields);
 
 // 销毁，如果动态扩容了，会释放掉堆内存
 IL_FUNC void il_destroy(IntList* il);
