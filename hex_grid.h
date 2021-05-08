@@ -25,6 +25,7 @@ struct HexBlock {
     int x;        // cube x
     int y;        // cube y
     int z;        // cube z
+    int area;     // 按(DEFAULT_OBSTACLE)划分的区域
     int prev_idx; // 上一个跳点
     unsigned char dirs; // 检索方向
     unsigned char isopen;

@@ -29,8 +29,8 @@
 #define DIR_SE 4
 #define DIR_SW 5
 
-#define idx2col(idx, w) (idx) % (w)
-#define idx2row(idx, w) (idx) / (w)
+#define idx2col(idx, w) ((idx) % (w))
+#define idx2row(idx, w) ((idx) / (w))
 
 static IntList* path = NULL;
 
@@ -110,8 +110,50 @@ static HexBlock* get_block_by_offset(HexGrid* grid, int col, int row) {
     return grid->blocks[col + row * grid->w];
 }
 
+static int oddr_directions[2][6][2] = {
+    {{-1, 0}, {-1, -1}, {0, -1}, {1, 0}, {0, 1}, {-1, 1}},
+    {{-1, 0}, {0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}},
+};
+
+static HexBlock* get_neighbor(HexGrid* grid, HexBlock* block, int dir) {
+    int parity = block->row & 1;
+    int* arr = oddr_directions[parity][dir];
+    int col = block->col + arr[0];
+    int row = block->row + arr[1];
+    //printf("get_neighbor, block:(%d %d), dir:%d, (%d, %d)\n", block->col, block->row, dir, col, row);
+    if(is_in_grid(grid, col, row)) {
+        return grid->blocks[col + row * grid->w];
+    } else {
+        return NULL;
+    }
+}
+
 static inline int unwalkable(HexBlock* block, int camp) {
     return block == NULL || (block->obstacle != 0 && block->obstacle != camp);
+}
+
+static void set_area(HexGrid* grid, HexBlock* block, int area) {
+    block->area = area;
+    for(int dir = 0; dir < NO_DIRECTION; ++dir) {
+        HexBlock* neighbor = get_neighbor(grid, block, dir);
+        if(neighbor!=NULL && neighbor->area == 0 && !unwalkable(neighbor, DEFAULT_CAMP)) {
+            set_area(grid, neighbor, area);
+        }
+    }
+}
+
+static void update_area(HexGrid* grid) {
+    for(int i = 0; i < grid->w * grid->h; ++i) {
+        grid->blocks[i]->area = 0;
+    }
+
+    int area = 1;;
+    for(int i = 0; i < grid->w * grid->h; ++i) {
+        HexBlock* block = grid->blocks[i];
+        if(!unwalkable(block, DEFAULT_CAMP) && block->area == 0){
+            set_area(grid, block, area++);
+        }
+    }
 }
 
 void hg_init() {
@@ -169,24 +211,7 @@ void hg_set_obstacle(HexGrid* grid, int x, int y, int obstacle) {
     DBGprint("set (%d, %d) = %d\n", x, y, obstacle);
     HexBlock* block = get_block_by_offset(grid, x, y);
     block->obstacle = obstacle;
-}
-
-static int oddr_directions[2][6][2] = {
-    {{-1, 0}, {-1, -1}, {0, -1}, {1, 0}, {0, 1}, {-1, 1}},
-    {{-1, 0}, {0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}},
-};
-
-static HexBlock* get_neighbor(HexGrid* grid, HexBlock* block, int dir) {
-    int parity = block->row & 1;
-    int* arr = oddr_directions[parity][dir];
-    int col = block->col + arr[0];
-    int row = block->row + arr[1];
-    //printf("get_neighbor, block:(%d %d), dir:%d, (%d, %d)\n", block->col, block->row, dir, col, row);
-    if(is_in_grid(grid, col, row)) {
-        return grid->blocks[col + row * grid->w];
-    } else {
-        return NULL;
-    }
+    update_area(grid);
 }
 
 static inline int dir_unwalkable(HexGrid* grid, HexBlock* block, int dir, int camp) {
@@ -253,17 +278,20 @@ IntList* hg_pathfinding(HexGrid* grid, int c1, int r1, int c2, int r2, int camp)
     //DBGprint("pathfinding (%d, %d) => (%d, %d)\n", x1, y1, x2, y2);
     HexBlock* start = get_block_by_offset(grid, c2, r2);
     HexBlock* end = get_block_by_offset(grid, c1, r1);
-    grid->sb = start;
-    grid->eb = end;
 
     il_clear(path);
-    if(unwalkable(start, camp) || unwalkable(end, camp)) {
+    if(start->area != end->area || unwalkable(start, camp) || unwalkable(end, camp)) {
+        DBGprint("no way, start:%d, end:%d, area:%d\n",
+            unwalkable(start, camp), unwalkable(end, camp), start->area != end->area);
         return path;
     }
     if(start == end) {
         add_to_path(start);
         return path;
     }
+
+    grid->sb = start; // 倒过来寻路
+    grid->eb = end;
 
     NodeFreeList* open_list = grid->open_list;
     add_to_open_list(grid, NULL, start, 0);
@@ -330,11 +358,11 @@ void hg_dump(HexGrid* grid) {
         if(y%2!=0)
             printf(" ");
         for(int x = 0; x < w; ++x){
-            int obstacle = grid->blocks[y * grid->w + x]->obstacle;
-            if(obstacle > 0)
+            HexBlock* block = grid->blocks[y * grid->w + x];
+            if(block->obstacle != 0)
                 printf("X ");
             else
-                printf("* ");
+                printf("%d ", block->area);
             /*
             HexBlock* cur = grid->blocks[y * grid->w + x];
             if (cur->prev_idx < 0){
