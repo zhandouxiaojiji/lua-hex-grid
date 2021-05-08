@@ -2,12 +2,16 @@ local hex_grid = require "hex_grid"
 local map = require "test.sample_map"
 
 local hg = hex_grid.new(map.w, map.h)
+local list = {}
 for _, v in pairs(map.blocks) do
     if v.obstacle then
-        hg:set_obstacle(v.col, v.row, -1)
+        list[#list+1] = {v.col, v.row, -1}
     end
 end
+hg:set_obstacles(list)
 hg:dump()
+print("walkable(1, 1)", hg:walkable(1, 1))
+print("walkable(0, 0)", hg:walkable(0, 0))
 
 --[[
 if hg.test_open_dump then

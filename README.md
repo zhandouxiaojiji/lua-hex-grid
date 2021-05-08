@@ -11,14 +11,19 @@
     + col 纵坐标(x)
     + row 横坐标(y)
     + obstacle 障碍标识()
++ grid:set_obstacles(list) 批量设置障碍
+    + list: {col, row, obstacle}, {col, row, obstacle}, ...}
 + grid:pathfinding(c1, r1, c2, r2, camp) 寻路
     + c1 r1 起点坐标
     + c2 r2 终点坐标
     + camp 阵营
     + 返回路点格式 {{1, 1}, {2, 2}} (有可能会出现跳点)
++ grid:walkable(col, row, camp) 格子是否可行
+    + col 纵坐标(x)
+    + row 横坐标(y)
+    + camp 阵营(不填默认被所有阵营阻挡)
 
 待补充接口:
-+ 批量设置障碍
 + 获取某个格子的三维坐标(x, y, z)
 + 获取指定方向邻居的坐标点
 + 计算离不可达区域最近的点

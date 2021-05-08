@@ -132,29 +132,7 @@ static inline int unwalkable(HexBlock* block, int camp) {
     return block == NULL || (block->obstacle != 0 && block->obstacle != camp);
 }
 
-static void set_area(HexGrid* grid, HexBlock* block, int area) {
-    block->area = area;
-    for(int dir = 0; dir < NO_DIRECTION; ++dir) {
-        HexBlock* neighbor = get_neighbor(grid, block, dir);
-        if(neighbor!=NULL && neighbor->area == 0 && !unwalkable(neighbor, DEFAULT_CAMP)) {
-            set_area(grid, neighbor, area);
-        }
-    }
-}
 
-static void update_area(HexGrid* grid) {
-    for(int i = 0; i < grid->w * grid->h; ++i) {
-        grid->blocks[i]->area = 0;
-    }
-
-    int area = 1;;
-    for(int i = 0; i < grid->w * grid->h; ++i) {
-        HexBlock* block = grid->blocks[i];
-        if(!unwalkable(block, DEFAULT_CAMP) && block->area == 0){
-            set_area(grid, block, area++);
-        }
-    }
-}
 
 void hg_init() {
     path = (IntList*)malloc(sizeof(IntList));
@@ -211,7 +189,39 @@ void hg_set_obstacle(HexGrid* grid, int x, int y, int obstacle) {
     DBGprint("set (%d, %d) = %d\n", x, y, obstacle);
     HexBlock* block = get_block_by_offset(grid, x, y);
     block->obstacle = obstacle;
-    update_area(grid);
+}
+
+static void set_area(HexGrid* grid, HexBlock* block, int area) {
+    block->area = area;
+    for(int dir = 0; dir < NO_DIRECTION; ++dir) {
+        HexBlock* neighbor = get_neighbor(grid, block, dir);
+        if(neighbor!=NULL && neighbor->area == 0 && !unwalkable(neighbor, DEFAULT_CAMP)) {
+            set_area(grid, neighbor, area);
+        }
+    }
+}
+
+void hg_update_area(HexGrid* grid) {
+    for(int i = 0; i < grid->w * grid->h; ++i) {
+        grid->blocks[i]->area = 0;
+    }
+
+    int area = 1;;
+    for(int i = 0; i < grid->w * grid->h; ++i) {
+        HexBlock* block = grid->blocks[i];
+        if(!unwalkable(block, DEFAULT_CAMP) && block->area == 0){
+            set_area(grid, block, area++);
+        }
+    }
+}
+
+int hg_walkable(HexGrid* grid, int col, int row, int camp) {
+    int w = grid->w;
+    int h = grid->h;
+    if(col >= w || col < 0 || row >= h || row < 0) {
+        return 0;
+    }
+    return !unwalkable(grid->blocks[col + row * w], camp);
 }
 
 static inline int dir_unwalkable(HexGrid* grid, HexBlock* block, int dir, int camp) {

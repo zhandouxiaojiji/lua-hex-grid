@@ -19,7 +19,7 @@ extern "C" {
 #define MT_NAME ("_hg_metatable")
 
 static int
-lhg_set_obstacle(lua_State *L) {
+lhg_set_obstacle(lua_State* L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
     int col = luaL_checkinteger(L, 2);
     int row = luaL_checkinteger(L, 3);
@@ -28,11 +28,47 @@ lhg_set_obstacle(lua_State *L) {
         obstacle = luaL_checkinteger(L, 4);
     }
     hg_set_obstacle(grid, col, row, obstacle);
+    hg_update_area(grid);
     return 0;
 }
 
 static int
-lhg_pathfinding(lua_State *L) {
+lhg_set_obstacles(lua_State* L) {
+    HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
+    luaL_checktype(L, 2, LUA_TTABLE);
+    lua_settop(L, 2);
+
+    int i = 1;
+    while (lua_geti(L, -1, i) == LUA_TTABLE) {
+        lua_geti(L, -1, 1);
+        int col = lua_tointeger(L, -1);
+        lua_geti(L, -2, 2);
+        int row = lua_tointeger(L, -1);
+        lua_geti(L, -3, 3);
+        int obstacle = lua_tointeger(L, -1);
+        hg_set_obstacle(grid, col, row, obstacle);
+        lua_pop(L, 4);
+        i++;
+    }
+    hg_update_area(grid);
+    return 0;
+}
+
+static int
+lhg_walkable(lua_State* L) {
+    HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
+    int col = luaL_checkinteger(L, 2);
+    int row = luaL_checkinteger(L, 3);
+    int camp = DEFAULT_CAMP;
+    if(lua_isinteger(L, 4)) {
+        camp = luaL_checkinteger(L, 4);
+    }
+    lua_pushboolean(L, hg_walkable(grid, col, row, camp));
+    return 1;
+}
+
+static int
+lhg_pathfinding(lua_State* L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
     int c1 = luaL_checkinteger(L, 2);
     int r1 = luaL_checkinteger(L, 3);
@@ -62,14 +98,14 @@ lhg_pathfinding(lua_State *L) {
 }
 
 static int
-lhg_dump(lua_State *L) {
+lhg_dump(lua_State* L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
     hg_dump(grid);
     return 0;
 }
 
 static int
-gc(lua_State *L) {
+gc(lua_State* L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
     hg_destroy(grid);
     return 0;
@@ -127,6 +163,8 @@ lmetatable(lua_State *L) {
     if (luaL_newmetatable(L, MT_NAME)) {
         luaL_Reg l[] = {
             { "set_obstacle", lhg_set_obstacle },
+            { "set_obstacles", lhg_set_obstacles },
+            { "walkable", lhg_walkable },
             { "pathfinding", lhg_pathfinding },
             { "dump", lhg_dump },
 #ifdef DEBUG
