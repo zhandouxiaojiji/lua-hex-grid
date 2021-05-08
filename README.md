@@ -6,6 +6,46 @@
 
 参考文档：https://www.redblobgames.com/grids/hexagons/
 
+# 接口
++ grid:set_obstacle(col, row, obstacle) 设置单个障碍
+    + col 纵坐标(x)
+    + row 横坐标(y)
+    + obstacle 障碍标识()
++ grid:pathfinding(c1, r1, c2, r2, camp) 寻路
+    + c1 r1 起点坐标
+    + c2 r2 终点坐标
+    + camp 阵营
+    + 返回路点格式 {{1, 1}, {2, 2}} (有可能会出现跳点)
+
+待补充接口:
++ 批量设置障碍
++ 获取某个格子的三维坐标(x, y, z)
++ 获取指定方向邻居的坐标点
++ 计算离不可达区域最近的点
+
+
+# 方向定义
+```c
+// N, NE, E, SE, S, SW, W, NW
+/*
+    1    2
+     \  /
+  0 --  -- 3
+     /  \
+    5    4
+*/
+#define DIR_W  0
+#define DIR_NW 1
+#define DIR_NE 2
+#define DIR_E  3
+#define DIR_SE 4
+#define DIR_SW 5
+
+#define NO_DIRECTION 6
+#define FULL_DIRECTIONSET 63
+#define EMPTY_DIRECTIONSET 0
+```
+
 ## 测试
 ```sh
 make # 编译并运行test.lua
