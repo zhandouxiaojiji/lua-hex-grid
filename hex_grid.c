@@ -165,7 +165,7 @@ void hg_destroy(HexGrid* grid) {
     free(grid->dirty_list);
 }
 
-void hg_set(HexGrid* grid, int x, int y, int obstacle) {
+void hg_set_obstacle(HexGrid* grid, int x, int y, int obstacle) {
     DBGprint("set (%d, %d) = %d\n", x, y, obstacle);
     HexBlock* block = get_block_by_offset(grid, x, y);
     block->obstacle = obstacle;

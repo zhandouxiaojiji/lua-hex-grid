@@ -19,25 +19,25 @@ extern "C" {
 #define MT_NAME ("_hg_metatable")
 
 static int
-gd_set(lua_State *L) {
+lhg_set_obstacle(lua_State *L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
-    int x = luaL_checkinteger(L, 2);
-    int y = luaL_checkinteger(L, 3);
+    int col = luaL_checkinteger(L, 2);
+    int row = luaL_checkinteger(L, 3);
     int obstacle = DEFAULT_OBSTACLE;
     if(lua_isinteger(L, 4)) {
         obstacle = luaL_checkinteger(L, 4);
     }
-    hg_set(grid, x, y, obstacle);
+    hg_set_obstacle(grid, col, row, obstacle);
     return 0;
 }
 
 static int
-gd_pathfinding(lua_State *L) {
+lhg_pathfinding(lua_State *L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
-    int x1 = luaL_checkinteger(L, 2);
-    int y1 = luaL_checkinteger(L, 3);
-    int x2 = luaL_checkinteger(L, 4);
-    int y2 = luaL_checkinteger(L, 5);
+    int c1 = luaL_checkinteger(L, 2);
+    int r1 = luaL_checkinteger(L, 3);
+    int c2 = luaL_checkinteger(L, 4);
+    int r2 = luaL_checkinteger(L, 5);
     int camp = DEFAULT_CAMP;
     if(lua_isinteger(L, 6)) {
         camp = luaL_checkinteger(L, 6);
@@ -46,7 +46,7 @@ gd_pathfinding(lua_State *L) {
             return 0;
         }
     }
-    IntList* path = hg_pathfinding(grid, x1, y1, x2, y2, camp);
+    IntList* path = hg_pathfinding(grid, c1, r1, c2, r2, camp);
 
     lua_newtable(L);
     for (int i = 0; i < il_size(path); ++i) {
@@ -62,7 +62,7 @@ gd_pathfinding(lua_State *L) {
 }
 
 static int
-gd_dump(lua_State *L) {
+lhg_dump(lua_State *L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
     hg_dump(grid);
     return 0;
@@ -120,24 +120,16 @@ test_open_dump(lua_State* L) {
     return 0;
 }
 
-static int
-test_destroy(lua_State* L) {
-    HexGrid* grid = luaL_checkudata(L, 1, MT_NAME);
-    hg_destroy(grid);
-    return 0;
-}
-
 #endif
 
 static int
 lmetatable(lua_State *L) {
     if (luaL_newmetatable(L, MT_NAME)) {
         luaL_Reg l[] = {
-            { "set", gd_set },
-            { "pathfinding", gd_pathfinding },
-            { "dump", gd_dump },
+            { "set_obstacle", lhg_set_obstacle },
+            { "pathfinding", lhg_pathfinding },
+            { "dump", lhg_dump },
 #ifdef DEBUG
-            { "test_destroy", test_destroy },
             { "test_open_insert", test_open_insert },
             { "test_open_pop", test_open_pop },
             { "test_open_dump", test_open_dump },

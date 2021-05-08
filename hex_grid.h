@@ -56,7 +56,7 @@ HEX_GRID_FUNC void hg_destroy(HexGrid* grid);
 // 设置障碍
 // obstacle: -1 所有单位不可通行
 // camp == obstacle || obstacle == 0 可通行
-HEX_GRID_FUNC void hg_set(HexGrid* grid, int x, int y, int obs);
+HEX_GRID_FUNC void hg_set_obstacle(HexGrid* grid, int x, int y, int obs);
 
 HEX_GRID_FUNC IntList* hg_pathfinding(HexGrid* grid, int x1, int y1, int x2, int y2, int camp);
 

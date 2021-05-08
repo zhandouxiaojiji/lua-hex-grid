@@ -4,7 +4,7 @@ local map = require "test.sample_map"
 local hg = hex_grid.new(map.w, map.h)
 for _, v in pairs(map.blocks) do
     if v.obstacle then
-        hg:set(v.col, v.row, -1)
+        hg:set_obstacle(v.col, v.row, -1)
     end
 end
 hg:dump()
