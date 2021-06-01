@@ -1,4 +1,4 @@
-local hex_grid = require "hex_grid"
+local hex_grid = require "hex_grid.c"
 local map = require "test.sample_map"
 
 local hg = hex_grid.new(map.w, map.h)
@@ -8,10 +8,19 @@ for _, v in pairs(map.blocks) do
         list[#list+1] = {v.col, v.row, -1}
     end
 end
+
+local function to_idx(col, row)
+    return row * map.w + col
+end
+
+local function to_offset(idx)
+    return idx % map.w, idx // map.w
+end
+
 hg:set_obstacles(list)
 hg:dump()
-print("walkable(1, 1)", hg:walkable(1, 1))
-print("walkable(0, 0)", hg:walkable(0, 0))
+print("walkable(1, 1)", hg:walkable(to_idx(1, 1)))
+print("walkable(0, 0)", hg:walkable(to_idx(0, 0)))
 
 --[[
 if hg.test_open_dump then
@@ -37,10 +46,10 @@ end
 ]]
 
 local function find(x1, y1, x2, y2, camp)
-    local path = hg:pathfinding(x1, y1, x2, y2, camp)
+    local path = hg:pathfinding(to_idx(x1, y1), to_idx(x2, y2), camp)
     print(string.format("----------- find path: (%d, %d) => (%d, %d) ------------", x1, y1, x2, y2))
     for _, v in pairs(path or {}) do
-        print(string.format("(%s, %s)", v[1], v[2]))
+        print(string.format("(%s, %s)", to_offset(v)))
     end
     print("----------------------------------------------------")
 end

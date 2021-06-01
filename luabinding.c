@@ -21,13 +21,12 @@ extern "C" {
 static int
 lhg_set_obstacle(lua_State* L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
-    int col = luaL_checkinteger(L, 2);
-    int row = luaL_checkinteger(L, 3);
+    int pos = luaL_checkinteger(L, 2);
     int obstacle = DEFAULT_OBSTACLE;
-    if(lua_isinteger(L, 4)) {
-        obstacle = luaL_checkinteger(L, 4);
+    if(lua_isinteger(L, 3)) {
+        obstacle = luaL_checkinteger(L, 3);
     }
-    hg_set_obstacle(grid, col, row, obstacle);
+    hg_set_obstacle(grid, pos, obstacle);
     hg_update_area(grid);
     return 0;
 }
@@ -41,13 +40,11 @@ lhg_set_obstacles(lua_State* L) {
     int i = 1;
     while (lua_geti(L, -1, i) == LUA_TTABLE) {
         lua_geti(L, -1, 1);
-        int col = lua_tointeger(L, -1);
+        int pos = lua_tointeger(L, -1);
         lua_geti(L, -2, 2);
-        int row = lua_tointeger(L, -1);
-        lua_geti(L, -3, 3);
         int obstacle = lua_tointeger(L, -1);
-        hg_set_obstacle(grid, col, row, obstacle);
-        lua_pop(L, 4);
+        hg_set_obstacle(grid, pos, obstacle);
+        lua_pop(L, 3);
         i++;
     }
     hg_update_area(grid);
@@ -57,41 +54,34 @@ lhg_set_obstacles(lua_State* L) {
 static int
 lhg_walkable(lua_State* L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
-    int col = luaL_checkinteger(L, 2);
-    int row = luaL_checkinteger(L, 3);
+    int pos = luaL_checkinteger(L, 2);
     int camp = DEFAULT_CAMP;
-    if(lua_isinteger(L, 4)) {
-        camp = luaL_checkinteger(L, 4);
+    if(lua_isinteger(L, 3)) {
+        camp = luaL_checkinteger(L, 3);
     }
-    lua_pushboolean(L, hg_walkable(grid, col, row, camp));
+    lua_pushboolean(L, hg_walkable(grid, pos, camp));
     return 1;
 }
 
 static int
 lhg_pathfinding(lua_State* L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
-    int c1 = luaL_checkinteger(L, 2);
-    int r1 = luaL_checkinteger(L, 3);
-    int c2 = luaL_checkinteger(L, 4);
-    int r2 = luaL_checkinteger(L, 5);
+    int pos1 = luaL_checkinteger(L, 2);
+    int pos2 = luaL_checkinteger(L, 3);
     int camp = DEFAULT_CAMP;
-    if(lua_isinteger(L, 6)) {
-        camp = luaL_checkinteger(L, 6);
+    if(lua_isinteger(L, 4)) {
+        camp = luaL_checkinteger(L, 4);
         if(camp <= 0) {
             luaL_error(L, "camp:%d must large than 0", camp);
             return 0;
         }
     }
-    IntList* path = hg_pathfinding(grid, c1, r1, c2, r2, camp);
+    IntList* path = hg_pathfinding(grid, pos1, pos2, camp);
 
     lua_newtable(L);
     for (int i = 0; i < il_size(path); ++i) {
-        lua_newtable(L);
         int idx = il_get(path, i, 0);
-        lua_pushinteger(L, idx % grid->w);
-        lua_rawseti(L, -2, 1);
-        lua_pushinteger(L, idx / grid->w);
-        lua_rawseti(L, -2, 2);
+        lua_pushinteger(L, idx);
         lua_rawseti(L, -2, i+1);
     }
     return 1;
@@ -200,7 +190,7 @@ lnew(lua_State *L) {
 }
 
 LUA_LIB_API int
-luaopen_hex_grid(lua_State* L) {
+luaopen_hex_grid_c(lua_State* L) {
     hg_init();
     luaL_checkversion(L);
     luaL_Reg l[] = {

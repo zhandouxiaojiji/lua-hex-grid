@@ -185,9 +185,9 @@ void hg_destroy(HexGrid* grid) {
     free(grid->dirty_list);
 }
 
-void hg_set_obstacle(HexGrid* grid, int x, int y, int obstacle) {
+void hg_set_obstacle(HexGrid* grid, int pos, int obstacle) {
     DBGprint("set (%d, %d) = %d\n", x, y, obstacle);
-    HexBlock* block = get_block_by_offset(grid, x, y);
+    HexBlock* block = grid->blocks[pos];
     block->obstacle = obstacle;
 }
 
@@ -215,13 +215,15 @@ void hg_update_area(HexGrid* grid) {
     }
 }
 
-int hg_walkable(HexGrid* grid, int col, int row, int camp) {
+int hg_walkable(HexGrid* grid, int pos, int camp) {
     int w = grid->w;
     int h = grid->h;
+    int col = idx2col(pos, grid->w);
+    int row = idx2row(pos, grid->h);
     if(col >= w || col < 0 || row >= h || row < 0) {
         return 0;
     }
-    return !unwalkable(grid->blocks[col + row * w], camp);
+    return !unwalkable(grid->blocks[pos], camp);
 }
 
 static inline int dir_unwalkable(HexGrid* grid, HexBlock* block, int dir, int camp) {
@@ -284,10 +286,10 @@ static void reset_grid(HexGrid* grid) {
     grid->eb = NULL;
 }
 
-IntList* hg_pathfinding(HexGrid* grid, int c1, int r1, int c2, int r2, int camp) {
+IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int camp) {
     //DBGprint("pathfinding (%d, %d) => (%d, %d)\n", x1, y1, x2, y2);
-    HexBlock* start = get_block_by_offset(grid, c2, r2);
-    HexBlock* end = get_block_by_offset(grid, c1, r1);
+    HexBlock* start = grid->blocks[pos2];
+    HexBlock* end = grid->blocks[pos1];
 
     il_clear(path);
     if(start->area != end->area || unwalkable(start, camp) || unwalkable(end, camp)) {
