@@ -39,11 +39,13 @@ NodeFreeList* hg_get_open_list(HexGrid* grid) {
 }
 
 // 32 位整数取较小值
+/*
 static int min_int(int a, int b) {
     a -= b;
     a &= a >> 31;
     return a + b;
 }
+*/
 
 // 32 位整数取较大值
 static int max_int(int a, int b) {
@@ -104,11 +106,13 @@ static void add_to_open_list(HexGrid* grid, HexBlock* src, HexBlock* dst, int g)
 #endif
 }
 
+/*
 static HexBlock* get_block_by_offset(HexGrid* grid, int col, int row) {
     col = min_int(grid->w - 1, max_int(0, col));
     row = min_int(grid->h - 1, max_int(0, row));
     return grid->blocks[col + row * grid->w];
 }
+*/
 
 static int oddr_directions[2][6][2] = {
     {{-1, 0}, {-1, -1}, {0, -1}, {1, 0}, {0, 1}, {-1, 1}},
@@ -132,6 +136,9 @@ static inline int unwalkable(HexBlock* block, int camp) {
     return block == NULL || (block->obstacle != 0 && block->obstacle != camp);
 }
 
+static inline int is_obstacle(HexBlock* block) {
+    return block == NULL || block->obstacle == DEFAULT_OBSTACLE;
+}
 
 
 void hg_init() {
@@ -195,7 +202,7 @@ static void set_area(HexGrid* grid, HexBlock* block, int area) {
     block->area = area;
     for(int dir = 0; dir < NO_DIRECTION; ++dir) {
         HexBlock* neighbor = get_neighbor(grid, block, dir);
-        if(neighbor!=NULL && neighbor->area == 0 && !unwalkable(neighbor, DEFAULT_CAMP)) {
+        if(neighbor!=NULL && neighbor->area == 0 && !is_obstacle(neighbor)) {
             set_area(grid, neighbor, area);
         }
     }
@@ -209,7 +216,7 @@ void hg_update_area(HexGrid* grid) {
     int area = 1;;
     for(int i = 0; i < grid->w * grid->h; ++i) {
         HexBlock* block = grid->blocks[i];
-        if(!unwalkable(block, DEFAULT_CAMP) && block->area == 0){
+        if(!is_obstacle(block) && block->area == 0){
             set_area(grid, block, area++);
         }
     }
@@ -292,9 +299,9 @@ IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int camp) {
     HexBlock* end = grid->blocks[pos1];
 
     il_clear(path);
-    if(start->area != end->area || unwalkable(start, camp) || unwalkable(end, camp)) {
+    if(start->area != end->area || is_obstacle(start) || is_obstacle(end)) {
         DBGprint("no way, start:%d, end:%d, area:%d\n",
-            unwalkable(start, camp), unwalkable(end, camp), start->area != end->area);
+            is_obstacle(start), is_obstacle(end), start->area != end->area);
         return path;
     }
     if(start == end) {
@@ -371,10 +378,10 @@ void hg_dump(HexGrid* grid) {
             printf(" ");
         for(int x = 0; x < w; ++x){
             HexBlock* block = grid->blocks[y * grid->w + x];
-            if(block->obstacle != 0)
+            if(block->obstacle == -1)
                 printf("X ");
             else
-                printf("%d ", block->area);
+                printf("%d ", block->obstacle);
             /*
             HexBlock* cur = grid->blocks[y * grid->w + x];
             if (cur->prev_idx < 0){
