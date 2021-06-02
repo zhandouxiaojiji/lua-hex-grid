@@ -132,12 +132,19 @@ static HexBlock* get_neighbor(HexGrid* grid, HexBlock* block, int dir) {
     }
 }
 
-static inline int unwalkable(HexBlock* block, int camp) {
-    return block == NULL || (block->obstacle != 0 && block->obstacle != camp);
+static inline int unwalkable(HexBlock* block) {
+    return block == NULL || block->obstacle == UNWALKABLE;
 }
 
-static inline int is_obstacle(HexBlock* block) {
-    return block == NULL || block->obstacle == DEFAULT_OBSTACLE;
+static inline int is_obstacle(HexBlock* block, int camp) {
+    if(unwalkable(block)) {
+        return 1;
+    }
+    if(camp == IGNORE_OBSTACLE || block->obstacle == 0) {
+        return 0;
+    } else {
+        return block->obstacle != camp;
+    }
 }
 
 
@@ -193,7 +200,6 @@ void hg_destroy(HexGrid* grid) {
 }
 
 void hg_set_obstacle(HexGrid* grid, int pos, int obstacle) {
-    DBGprint("set (%d, %d) = %d\n", x, y, obstacle);
     HexBlock* block = grid->blocks[pos];
     block->obstacle = obstacle;
 }
@@ -202,7 +208,7 @@ static void set_area(HexGrid* grid, HexBlock* block, int area) {
     block->area = area;
     for(int dir = 0; dir < NO_DIRECTION; ++dir) {
         HexBlock* neighbor = get_neighbor(grid, block, dir);
-        if(neighbor!=NULL && neighbor->area == 0 && !is_obstacle(neighbor)) {
+        if(neighbor!=NULL && neighbor->area == 0 && !unwalkable(neighbor)) {
             set_area(grid, neighbor, area);
         }
     }
@@ -213,28 +219,24 @@ void hg_update_area(HexGrid* grid) {
         grid->blocks[i]->area = 0;
     }
 
-    int area = 1;;
+    int area = 1;
     for(int i = 0; i < grid->w * grid->h; ++i) {
         HexBlock* block = grid->blocks[i];
-        if(!is_obstacle(block) && block->area == 0){
+        if(!unwalkable(block) && block->area == 0){
             set_area(grid, block, area++);
         }
     }
 }
 
-int hg_walkable(HexGrid* grid, int pos, int camp) {
-    int w = grid->w;
-    int h = grid->h;
-    int col = idx2col(pos, grid->w);
-    int row = idx2row(pos, grid->h);
-    if(col >= w || col < 0 || row >= h || row < 0) {
-        return 0;
+int hg_get_obstacle(HexGrid* grid, int pos) {
+    if(pos < 0 || pos >= grid->w * grid->h) {
+        return UNWALKABLE;
     }
-    return !unwalkable(grid->blocks[pos], camp);
+    return grid->blocks[pos]->obstacle;
 }
 
-static inline int dir_unwalkable(HexGrid* grid, HexBlock* block, int dir, int camp) {
-    return unwalkable(get_neighbor(grid, block, dir), camp);
+static inline int dir_obstacle(HexGrid* grid, HexBlock* block, int dir, int camp) {
+    return is_obstacle(get_neighbor(grid, block, dir), camp);
 }
 
 static int FORCE_DIRS[][4] = {
@@ -249,7 +251,7 @@ static int FORCE_DIRS[][4] = {
 static int find_forced_neighbor(HexGrid* grid, HexBlock* block, int dir, int camp) {
     int* arr = FORCE_DIRS[dir];
     for(int i = 0; i<4; i+=2) {
-        if(!dir_unwalkable(grid, block, arr[i], camp) && dir_unwalkable(grid, block, arr[i+1], camp)) {
+        if(!dir_obstacle(grid, block, arr[i], camp) && dir_obstacle(grid, block, arr[i+1], camp)) {
             return 1;
         }
     }
@@ -261,7 +263,7 @@ static int find_jump_point(HexGrid* grid, HexBlock* src, int dir, int g, int cam
     HexBlock* next = get_neighbor(grid, src, dir);
     while(next != NULL) {
         g++;
-        if(is_close(next) || is_open(next) || unwalkable(next, camp)) {
+        if(is_close(next) || is_open(next) || is_obstacle(next, camp)) {
             return found;
         }
         if(next == grid->eb) {
@@ -299,9 +301,9 @@ IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int camp) {
     HexBlock* end = grid->blocks[pos1];
 
     il_clear(path);
-    if(start->area != end->area || is_obstacle(start) || is_obstacle(end)) {
+    if(start->area != end->area || unwalkable(start) || unwalkable(end)) {
         DBGprint("no way, start:%d, end:%d, area:%d\n",
-            is_obstacle(start), is_obstacle(end), start->area != end->area);
+            unwalkable(start), unwalkable(end), start->area != end->area);
         return path;
     }
     if(start == end) {
@@ -340,7 +342,7 @@ IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int camp) {
             if(neighbor != NULL)
                 //printf("search_around:(%d %d) => (%d %d), dir:%d, g:%d\n",
                 //        block->col, block->row, neighbor->col, neighbor->row, dir, node->g+1);
-            if(!unwalkable(neighbor, camp) && !is_close(neighbor) && !is_open(neighbor)) {
+            if(!is_obstacle(neighbor, camp) && !is_close(neighbor) && !is_open(neighbor)) {
                 add_to_open_list(grid, block, neighbor, node->g+1);
             }
         }

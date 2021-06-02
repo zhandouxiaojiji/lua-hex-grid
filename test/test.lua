@@ -20,8 +20,8 @@ end
 hg:set_obstacles(list)
 hg:set_obstacle(to_idx(1, 0), 1)
 hg:dump()
-print("walkable(1, 1)", hg:walkable(to_idx(1, 1)))
-print("walkable(0, 0)", hg:walkable(to_idx(0, 0)))
+print("obstacle(1, 1)", hg:get_obstacle(to_idx(1, 1)))
+print("obstacle(0, 0)", hg:get_obstacle(to_idx(0, 0)))
 
 --[[
 if hg.test_open_dump then
@@ -55,7 +55,7 @@ local function find(x1, y1, x2, y2, camp)
     print("----------------------------------------------------")
 end
 
-find(0, 0, 2, 2)
+find(0, 0, 2, 2, 3)
 find(0, 0, 5, 3)
 find(5, 3, 0, 0)
 find(5, 3, 2, 3)

@@ -11,8 +11,8 @@
 #define HEX_GRID_FUNC
 #endif
 
-#define DEFAULT_OBSTACLE -1
-#define DEFAULT_CAMP -2
+#define UNWALKABLE -1
+#define IGNORE_OBSTACLE -2
 
 typedef struct HexGrid HexGrid;
 typedef struct HexBlock HexBlock;
@@ -64,7 +64,7 @@ HEX_GRID_FUNC void hg_destroy(HexGrid* grid);
 // camp == obstacle || obstacle == 0 可通行
 HEX_GRID_FUNC void hg_set_obstacle(HexGrid* grid, int pos, int obs);
 
-HEX_GRID_FUNC int hg_walkable(HexGrid* grid, int pos, int camp);
+HEX_GRID_FUNC int hg_get_obstacle(HexGrid* grid, int pos);
 
 HEX_GRID_FUNC void hg_update_area(HexGrid* grid);
 

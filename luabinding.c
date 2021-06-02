@@ -22,7 +22,7 @@ static int
 lhg_set_obstacle(lua_State* L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
     int pos = luaL_checkinteger(L, 2);
-    int obstacle = DEFAULT_OBSTACLE;
+    int obstacle = UNWALKABLE;
     if(lua_isinteger(L, 3)) {
         obstacle = luaL_checkinteger(L, 3);
     }
@@ -52,14 +52,10 @@ lhg_set_obstacles(lua_State* L) {
 }
 
 static int
-lhg_walkable(lua_State* L) {
+lhg_get_obstacle(lua_State* L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
     int pos = luaL_checkinteger(L, 2);
-    int camp = DEFAULT_CAMP;
-    if(lua_isinteger(L, 3)) {
-        camp = luaL_checkinteger(L, 3);
-    }
-    lua_pushboolean(L, hg_walkable(grid, pos, camp));
+    lua_pushinteger(L, hg_get_obstacle(grid, pos));
     return 1;
 }
 
@@ -68,7 +64,7 @@ lhg_pathfinding(lua_State* L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
     int pos1 = luaL_checkinteger(L, 2);
     int pos2 = luaL_checkinteger(L, 3);
-    int camp = DEFAULT_CAMP;
+    int camp = IGNORE_OBSTACLE;
     if(lua_isinteger(L, 4)) {
         camp = luaL_checkinteger(L, 4);
         if(camp <= 0) {
@@ -154,7 +150,7 @@ lmetatable(lua_State *L) {
         luaL_Reg l[] = {
             { "set_obstacle", lhg_set_obstacle },
             { "set_obstacles", lhg_set_obstacles },
-            { "walkable", lhg_walkable },
+            { "get_obstacle", lhg_get_obstacle },
             { "pathfinding", lhg_pathfinding },
             { "dump", lhg_dump },
 #ifdef DEBUG
