@@ -186,7 +186,7 @@ lnew(lua_State *L) {
 }
 
 LUA_LIB_API int
-luaopen_hex_grid_c(lua_State* L) {
+luaopen_hex_grid(lua_State* L) {
     hg_init();
     luaL_checkversion(L);
     luaL_Reg l[] = {

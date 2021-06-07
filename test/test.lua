@@ -1,4 +1,4 @@
-local hex_grid = require "hex_grid.c"
+local hex_grid = require "hex_grid"
 local map = require "test.sample_map"
 
 local function to_idx(col, row)
