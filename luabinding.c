@@ -67,10 +67,6 @@ lhg_pathfinding(lua_State* L) {
     int camp = IGNORE_OBSTACLE;
     if(lua_isinteger(L, 4)) {
         camp = luaL_checkinteger(L, 4);
-        if(camp <= 0) {
-            luaL_error(L, "camp:%d must large than 0", camp);
-            return 0;
-        }
     }
     IntList* path = hg_pathfinding(grid, pos1, pos2, camp);
 
