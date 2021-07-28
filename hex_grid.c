@@ -332,7 +332,7 @@ IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int camp) {
                     //printf("## close block(%d %d)\n", block->col, block->row);
                 }
                 if(find_jump_point(grid, block, dir, node->g, camp)){
-                    continue;
+                    break;
                 }
             }
         }
