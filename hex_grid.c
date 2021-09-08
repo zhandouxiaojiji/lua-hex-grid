@@ -204,6 +204,11 @@ void hg_set_obstacle(HexGrid* grid, int pos, int obstacle) {
     block->obstacle = obstacle;
 }
 
+int hg_get_area(HexGrid* grid, int pos) {
+    HexBlock* block = grid->blocks[pos];
+    return block->area;
+}
+
 static void set_area(HexGrid* grid, HexBlock* block, int area) {
     block->area = area;
     for(int dir = 0; dir < NO_DIRECTION; ++dir) {

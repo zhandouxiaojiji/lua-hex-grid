@@ -66,6 +66,8 @@ HEX_GRID_FUNC void hg_set_obstacle(HexGrid* grid, int pos, int obs);
 
 HEX_GRID_FUNC int hg_get_obstacle(HexGrid* grid, int pos);
 
+HEX_GRID_FUNC int hg_get_area(HexGrid* grid, int pos);
+
 HEX_GRID_FUNC void hg_update_area(HexGrid* grid);
 
 HEX_GRID_FUNC IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int camp);

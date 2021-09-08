@@ -60,6 +60,14 @@ lhg_get_obstacle(lua_State* L) {
 }
 
 static int
+lhg_get_area(lua_State* L) {
+    HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
+    int pos = luaL_checkinteger(L, 2);
+    lua_pushinteger(L, hg_get_area(grid, pos));
+    return 1;
+}
+
+static int
 lhg_pathfinding(lua_State* L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
     int pos1 = luaL_checkinteger(L, 2);
@@ -147,6 +155,7 @@ lmetatable(lua_State *L) {
             { "set_obstacle", lhg_set_obstacle },
             { "set_obstacles", lhg_set_obstacles },
             { "get_obstacle", lhg_get_obstacle },
+            { "get_area", lhg_get_area },
             { "pathfinding", lhg_pathfinding },
             { "dump", lhg_dump },
 #ifdef DEBUG
