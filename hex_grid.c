@@ -1,13 +1,15 @@
 #include "hex_grid.h"
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
 #ifdef DEBUG
-    #define DBGprint(fmt, args...) fprintf(stderr, "\033[1;32m  ---- grid in c ----(%s:%d):\t\033[0m" fmt, __func__, __LINE__, ##args)
+#define DBGprint(fmt, args...)                                              \
+    fprintf(stderr, "\033[1;32m  ---- grid in c ----(%s:%d):\t\033[0m" fmt, \
+            __func__, __LINE__, ##args)
 #else
-    #define DBGprint(fmt, args...)
+#define DBGprint(fmt, args...)
 #endif
 
 // N, NE, E, SE, S, SW, W, NW
@@ -22,10 +24,10 @@
 #define FULL_DIRECTIONSET 63
 #define EMPTY_DIRECTIONSET 0
 
-#define DIR_W  0
+#define DIR_W 0
 #define DIR_NW 1
 #define DIR_NE 2
-#define DIR_E  3
+#define DIR_E 3
 #define DIR_SE 4
 #define DIR_SW 5
 
@@ -54,12 +56,13 @@ static int max_int(int a, int b) {
     return a + b;
 }
 
-static int calc_h(HexBlock* from, HexBlock* to) {
-    return max_int(max_int(abs(from->x - to->x), abs(from->y - to->y)), abs(from->z - to->z));
+static int calc_hscore(HexBlock* from, HexBlock* to) {
+    return max_int(max_int(abs(from->x - to->x), abs(from->y - to->y)),
+                   abs(from->z - to->z));
 }
 
 static inline int in_dirs(unsigned char dirs, unsigned char dir) {
-    return (dirs | (1<<dir)) == dirs;
+    return (dirs | (1 << dir)) == dirs;
 }
 
 static void add_to_path(HexBlock* block) {
@@ -70,39 +73,35 @@ static void set_dirty(HexGrid* grid, HexBlock* block) {
     il_set(grid->dirty_list, il_push_back(grid->dirty_list), 0, block->idx);
 }
 
-static void add_dir(HexGrid* grid, HexBlock* block, int dir) {
-    if(block->dirs == 0) {
-        set_dirty(grid, block);
-    }
-    block->dirs |= (1<<dir);
-}
-
 static inline int is_in_grid(HexGrid* grid, int col, int row) {
     return col >= 0 && col < grid->w && row >= 0 && row < grid->h;
 }
 
 static inline int is_close(HexBlock* block) {
-    return block->dirs == FULL_DIRECTIONSET;
+    return block->flag == FLAG_CLOSE;
 }
 
 static inline int is_open(HexBlock* block) {
-    return block->isopen == 1;
+    return block->flag == FLAG_OPEN;
 }
 
-static void add_to_open_list(HexGrid* grid, HexBlock* src, HexBlock* dst, int g) {
+static void add_to_open_list(HexGrid* grid, HexBlock* src, HexBlock* dst) {
+    if (dst->flag == FLAG_OPEN || dst->flag == FLAG_CLOSE) {
+        return;
+    }
     set_dirty(grid, dst);
-    if(src != NULL) {
+    if (src != NULL) {
         dst->prev_idx = src->idx;
     }
-    dst->isopen = 1;
-    if(!is_close(dst)){
-        nfl_insert(grid->open_list, dst->idx, g, calc_h(dst, grid->eb));
-    }
+    dst->flag = FLAG_OPEN;
+    nfl_insert(grid->open_list, dst->idx, dst->gscore, dst->hscore);
+
 #ifdef DEBUG
-    int h = calc_h(dst, grid->eb);
-    int f = g + h;
-    DBGprint("=========open (%d %d) g:%d h:%d f:%d prev:(%d, %d)==========\n", dst->col, dst->row, g, h, f, src?src->col:-1, src?src->row:-1);
-    //hg_dump(grid);
+    int fscore = dst->gscore + dst->hscore;
+    DBGprint("=========open (%d %d) g:%d h:%d f:%d prev:(%d, %d)==========\n",
+             dst->col, dst->row, dst->gscore, dst->hscore, fscore, src ? src->col : -1,
+             src ? src->row : -1);
+    // hg_dump(grid);
 #endif
 }
 
@@ -124,8 +123,9 @@ static HexBlock* get_neighbor(HexGrid* grid, HexBlock* block, int dir) {
     int* arr = oddr_directions[parity][dir];
     int col = block->col + arr[0];
     int row = block->row + arr[1];
-    //printf("get_neighbor, block:(%d %d), dir:%d, (%d, %d)\n", block->col, block->row, dir, col, row);
-    if(is_in_grid(grid, col, row)) {
+    // printf("get_neighbor, block:(%d %d), dir:%d, (%d, %d)\n", block->col,
+    // block->row, dir, col, row);
+    if (is_in_grid(grid, col, row)) {
         return grid->blocks[col + row * grid->w];
     } else {
         return NULL;
@@ -137,16 +137,15 @@ static inline int unwalkable(HexBlock* block) {
 }
 
 static inline int is_obstacle(HexBlock* block, int camp) {
-    if(unwalkable(block)) {
+    if (unwalkable(block)) {
         return 1;
     }
-    if(camp == IGNORE_OBSTACLE || block->obstacle == 0) {
+    if (camp == IGNORE_OBSTACLE || block->obstacle == 0) {
         return 0;
     } else {
         return block->obstacle != camp;
     }
 }
-
 
 void hg_init() {
     path = (IntList*)malloc(sizeof(IntList));
@@ -157,18 +156,17 @@ void hg_create(HexGrid* grid, int w, int h) {
     int count = w * h;
     grid->blocks = malloc(count * sizeof(HexBlock*));
 
-    for(int i = 0; i < count; ++i) {
+    for (int i = 0; i < count; ++i) {
         HexBlock* block = (HexBlock*)malloc(sizeof(HexBlock));
         block->obstacle = 0;
         block->idx = i;
         block->col = idx2col(i, w);
         block->row = idx2row(i, w);
-        block->x = block->col - (block->row - ( block->row & 1)) / 2;
+        block->x = block->col - (block->row - (block->row & 1)) / 2;
         block->z = block->row;
         block->y = -block->x - block->z;
         block->prev_idx = -1;
-        block->dirs = 0;
-        block->isopen = 0;
+        block->flag = FLAG_INIT;
         grid->blocks[i] = block;
     }
 
@@ -177,7 +175,7 @@ void hg_create(HexGrid* grid, int w, int h) {
     grid->sb = NULL;
     grid->eb = NULL;
 
-    grid->open_list = (NodeFreeList *)malloc(sizeof(NodeFreeList));
+    grid->open_list = (NodeFreeList*)malloc(sizeof(NodeFreeList));
     nfl_init(grid->open_list);
 
     grid->dirty_list = (IntList*)malloc(sizeof(IntList));
@@ -187,7 +185,7 @@ void hg_create(HexGrid* grid, int w, int h) {
 }
 
 void hg_destroy(HexGrid* grid) {
-    for(int i = 0; i < grid->w * grid->h; ++i) {
+    for (int i = 0; i < grid->w * grid->h; ++i) {
         free(grid->blocks[i]);
     }
     free(grid->blocks);
@@ -211,88 +209,57 @@ int hg_get_area(HexGrid* grid, int pos) {
 
 static void set_area(HexGrid* grid, HexBlock* block, int area) {
     block->area = area;
-    for(int dir = 0; dir < NO_DIRECTION; ++dir) {
+    for (int dir = 0; dir < NO_DIRECTION; ++dir) {
         HexBlock* neighbor = get_neighbor(grid, block, dir);
-        if(neighbor!=NULL && neighbor->area == 0 && !unwalkable(neighbor)) {
+        if (neighbor != NULL && neighbor->area == 0 && !unwalkable(neighbor)) {
             set_area(grid, neighbor, area);
         }
     }
 }
 
 void hg_update_area(HexGrid* grid) {
-    for(int i = 0; i < grid->w * grid->h; ++i) {
+    for (int i = 0; i < grid->w * grid->h; ++i) {
         grid->blocks[i]->area = 0;
     }
 
     int area = 1;
-    for(int i = 0; i < grid->w * grid->h; ++i) {
+    for (int i = 0; i < grid->w * grid->h; ++i) {
         HexBlock* block = grid->blocks[i];
-        if(!unwalkable(block) && block->area == 0){
+        if (!unwalkable(block) && block->area == 0) {
             set_area(grid, block, area++);
         }
     }
 }
 
 int hg_get_obstacle(HexGrid* grid, int pos) {
-    if(pos < 0 || pos >= grid->w * grid->h) {
+    if (pos < 0 || pos >= grid->w * grid->h) {
         return UNWALKABLE;
     }
     return grid->blocks[pos]->obstacle;
 }
 
-static inline int dir_obstacle(HexGrid* grid, HexBlock* block, int dir, int camp) {
+static inline int dir_obstacle(HexGrid* grid,
+                               HexBlock* block,
+                               int dir,
+                               int camp) {
     return is_obstacle(get_neighbor(grid, block, dir), camp);
 }
 
 static int FORCE_DIRS[][4] = {
-    {DIR_NW, DIR_NE, DIR_SW, DIR_SE}, //DIR_W  0
-    {DIR_NE, DIR_E,  DIR_W,  DIR_SW}, //DIR_NW 1
-    {DIR_NW, DIR_W,  DIR_E,  DIR_SE}, //DIR_NE 2
-    {DIR_NE, DIR_NW, DIR_SE, DIR_SW}, //DIR_E  3
-    {DIR_E,  DIR_NE, DIR_SW, DIR_W }, //DIR_SE 4
-    {DIR_SE, DIR_E,  DIR_W,  DIR_NW}, //DIR_SW 5
+    {DIR_NW, DIR_NE, DIR_SW, DIR_SE},  // DIR_W  0
+    {DIR_NE, DIR_E, DIR_W, DIR_SW},    // DIR_NW 1
+    {DIR_NW, DIR_W, DIR_E, DIR_SE},    // DIR_NE 2
+    {DIR_NE, DIR_NW, DIR_SE, DIR_SW},  // DIR_E  3
+    {DIR_E, DIR_NE, DIR_SW, DIR_W},    // DIR_SE 4
+    {DIR_SE, DIR_E, DIR_W, DIR_NW},    // DIR_SW 5
 };
-
-static int find_forced_neighbor(HexGrid* grid, HexBlock* block, int dir, int camp) {
-    int* arr = FORCE_DIRS[dir];
-    for(int i = 0; i<4; i+=2) {
-        if(!dir_obstacle(grid, block, arr[i], camp) && dir_obstacle(grid, block, arr[i+1], camp)) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-static int find_jump_point(HexGrid* grid, HexBlock* src, int dir, int g, int camp) {
-    int found = 0;
-    HexBlock* next = get_neighbor(grid, src, dir);
-    while(next != NULL) {
-        g++;
-        if(is_close(next) || is_open(next) || is_obstacle(next, camp)) {
-            return found;
-        }
-        if(next == grid->eb) {
-            //printf("(%d %d)found (%d %d) end, dir:%d\n", src->col, src->row, next->col, next->row, dir);
-            add_to_open_list(grid, src, next, g);
-            return 1;
-        }
-        if(find_forced_neighbor(grid, next, dir, camp)) {
-            //printf("(%d %d)found (%d %d) forced, dir:%d\n", src->col, src->row, next->col, next->row, dir);
-            add_to_open_list(grid, src, next, g);
-            found = 1;
-        }
-        next = get_neighbor(grid, next, dir);
-    }
-    return found;
-}
 
 static void reset_grid(HexGrid* grid) {
     IntList* dirty_list = grid->dirty_list;
-    for(int i = 0; i < dirty_list->num; ++i) {
+    for (int i = 0; i < dirty_list->num; ++i) {
         HexBlock* block = grid->blocks[il_get(dirty_list, i, 0)];
-        block->dirs = 0;
-        block->prev_idx = -1;;
-        block->isopen = 0;
+        block->prev_idx = -1;
+        block->flag = FLAG_INIT;
     }
     il_clear(dirty_list);
     nfl_clear(grid->open_list);
@@ -300,71 +267,71 @@ static void reset_grid(HexGrid* grid) {
     grid->eb = NULL;
 }
 
+// A-star
 IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int camp) {
-    //DBGprint("pathfinding (%d, %d) => (%d, %d)\n", x1, y1, x2, y2);
-    HexBlock* start = grid->blocks[pos2];
+    // DBGprint("pathfinding (%d, %d) => (%d, %d)\n", x1, y1, x2, y2);
+    HexBlock* start = grid->blocks[pos2]; // 交换起点终点
     HexBlock* end = grid->blocks[pos1];
 
     il_clear(path);
-    if(start->area != end->area || unwalkable(start) || unwalkable(end)) {
-        DBGprint("no way, start:%d, end:%d, area:%d\n",
-            unwalkable(start), unwalkable(end), start->area != end->area);
+    if (start->area != end->area || unwalkable(start) || unwalkable(end)) {
+        DBGprint("no way, start:%d, end:%d, area:%d\n", unwalkable(start),
+                 unwalkable(end), start->area != end->area);
         return path;
     }
-    if(start == end) {
+    if (start == end) {
         add_to_path(start);
         return path;
     }
 
-    grid->sb = start; // 倒过来寻路
+    grid->sb = start;
     grid->eb = end;
 
     NodeFreeList* open_list = grid->open_list;
-    add_to_open_list(grid, NULL, start, 0);
+    add_to_open_list(grid, NULL, start);
 
-    while(!nfl_is_empty(open_list)) {
-        Node* node = nfl_head(open_list);
-        HexBlock* block = grid->blocks[node->idx];
-        if(block == end) {
+    int gscore = 0;
+    while (!nfl_is_empty(open_list)) {
+        Node* node = nfl_pop(open_list);
+        HexBlock* cur = grid->blocks[node->pos];
+        cur->flag = FLAG_CLOSE;
+        if (cur == end) {
+            // end->prev_idx = cur->idx;
             break;
         }
-        //printf("current: (%d %d), g:%d, h:%d, f:%d\n", node->idx % grid->w, node->idx / grid->w, node->g, node->h, node->f);
-        for(int dir = 0; dir < NO_DIRECTION; ++dir) {
-            if(!in_dirs(block->dirs, dir)) {
-                add_dir(grid, block, dir);
-                if(is_close(block)) {
-                    nfl_remove(grid->open_list, node);
-                    //printf("## close block(%d %d)\n", block->col, block->row);
-                }
-                if(find_jump_point(grid, block, dir, node->g, camp)){
-                    break;
-                }
+        gscore++;
+        // printf("current: (%d %d), g:%d, h:%d, f:%d\n", node->idx % grid->w,
+        // node->idx / grid->w, node->g, node->h, node->f);
+        for (int dir = 0; dir < NO_DIRECTION; ++dir) {
+            HexBlock* block = get_neighbor(grid, cur, dir);
+            if (block == NULL) {
+                continue;
             }
-        }
-
-        for(int dir = 0; dir < NO_DIRECTION; ++dir) {
-            HexBlock* neighbor = get_neighbor(grid, block, dir);
-            if(neighbor != NULL)
-                //printf("search_around:(%d %d) => (%d %d), dir:%d, g:%d\n",
-                //        block->col, block->row, neighbor->col, neighbor->row, dir, node->g+1);
-            if(!is_obstacle(neighbor, camp) && !is_close(neighbor) && !is_open(neighbor)) {
-                add_to_open_list(grid, block, neighbor, node->g+1);
+            if (block->flag == FLAG_INIT) {
+                if (is_obstacle(block, camp)) {
+                    block->flag = FLAG_CLOSE;
+                } else {
+                    block->gscore = gscore;
+                    block->hscore = calc_hscore(block, grid->eb);
+                    add_to_open_list(grid, cur, block);
+                }
+            } else if (block->flag == FLAG_OPEN && block->gscore > gscore + 1) {
+                nfl_remove(grid->open_list, block->node);
+                block->gscore = gscore + 1;
+                nfl_insert(grid->open_list, block->idx, block->gscore,
+                           block->hscore);
             }
-        }
-
-        if(grid->eb->prev_idx >= 0) {
-            break;
         }
     }
 
-    //hg_dump(grid);
+    // hg_dump(grid);
 
-    if(end->prev_idx >= 0) {
+    if (end->prev_idx >= 0) {
         int idx = end->idx;
-        while(idx >= 0) {
+        while (idx >= 0) {
             HexBlock* cur = grid->blocks[idx];
             add_to_path(cur);
-            if(idx == cur->prev_idx) {
+            if (idx == cur->prev_idx) {
                 printf("endless idx:%d\n", idx);
                 break;
             }
@@ -380,12 +347,12 @@ IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int camp) {
 void hg_dump(HexGrid* grid) {
     int w = grid->w;
     int h = grid->h;
-    for(int y = 0; y < h; ++ y){
-        if(y%2!=0)
+    for (int y = 0; y < h; ++y) {
+        if (y % 2 != 0)
             printf(" ");
-        for(int x = 0; x < w; ++x){
+        for (int x = 0; x < w; ++x) {
             HexBlock* block = grid->blocks[y * grid->w + x];
-            if(block->obstacle == -1)
+            if (block->obstacle == -1)
                 printf("X ");
             else
                 printf("%d ", block->obstacle);

@@ -14,6 +14,10 @@
 #define UNWALKABLE -1
 #define IGNORE_OBSTACLE -2
 
+#define FLAG_INIT 0
+#define FLAG_OPEN 1
+#define FLAG_CLOSE 2
+
 typedef struct HexGrid HexGrid;
 typedef struct HexBlock HexBlock;
 /*
@@ -32,8 +36,10 @@ struct HexBlock {
     int z;        // cube z
     int area;     // 按(DEFAULT_OBSTACLE)划分的区域
     int prev_idx; // 上一个跳点
-    unsigned char dirs; // 检索方向
-    unsigned char isopen;
+    int gscore;
+    int hscore;
+    unsigned char flag; // open & close标志
+    Node* node;
 };
 
 // 整个网格

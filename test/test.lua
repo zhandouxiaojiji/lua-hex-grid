@@ -18,7 +18,7 @@ for _, v in pairs(map.blocks) do
 end
 
 hg:set_obstacles(list)
-hg:set_obstacle(to_idx(1, 0), 1)
+-- hg:set_obstacle(to_idx(1, 0), 1)
 hg:dump()
 print("obstacle(1, 1)", hg:get_obstacle(to_idx(1, 1)))
 print("obstacle(0, 0)", hg:get_obstacle(to_idx(0, 0)))

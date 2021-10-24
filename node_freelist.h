@@ -17,7 +17,7 @@ struct Node {
     int next;
 
     // 存储节点的位置
-    int idx;
+    int pos;
 
     int f;
     int g;
