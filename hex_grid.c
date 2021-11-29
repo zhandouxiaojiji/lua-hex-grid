@@ -245,14 +245,14 @@ static inline int dir_obstacle(HexGrid* grid,
     return is_obstacle(get_neighbor(grid, block, dir), camp);
 }
 
-static int FORCE_DIRS[][4] = {
-    {DIR_NW, DIR_NE, DIR_SW, DIR_SE},  // DIR_W  0
-    {DIR_NE, DIR_E, DIR_W, DIR_SW},    // DIR_NW 1
-    {DIR_NW, DIR_W, DIR_E, DIR_SE},    // DIR_NE 2
-    {DIR_NE, DIR_NW, DIR_SE, DIR_SW},  // DIR_E  3
-    {DIR_E, DIR_NE, DIR_SW, DIR_W},    // DIR_SE 4
-    {DIR_SE, DIR_E, DIR_W, DIR_NW},    // DIR_SW 5
-};
+// static int FORCE_DIRS[][4] = {
+//     {DIR_NW, DIR_NE, DIR_SW, DIR_SE},  // DIR_W  0
+//     {DIR_NE, DIR_E, DIR_W, DIR_SW},    // DIR_NW 1
+//     {DIR_NW, DIR_W, DIR_E, DIR_SE},    // DIR_NE 2
+//     {DIR_NE, DIR_NW, DIR_SE, DIR_SW},  // DIR_E  3
+//     {DIR_E, DIR_NE, DIR_SW, DIR_W},    // DIR_SE 4
+//     {DIR_SE, DIR_E, DIR_W, DIR_NW},    // DIR_SW 5
+// };
 
 static void reset_grid(HexGrid* grid) {
     IntList* dirty_list = grid->dirty_list;
