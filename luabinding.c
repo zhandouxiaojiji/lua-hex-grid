@@ -22,7 +22,7 @@ static int
 lhg_set_obstacle(lua_State* L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
     int pos = luaL_checkinteger(L, 2);
-    int obstacle = UNWALKABLE;
+    int obstacle = OBS_TERRAIN;
     if(lua_isinteger(L, 3)) {
         obstacle = luaL_checkinteger(L, 3);
     }
@@ -42,7 +42,10 @@ lhg_set_obstacles(lua_State* L) {
         lua_geti(L, -1, 1);
         int pos = lua_tointeger(L, -1);
         lua_geti(L, -2, 2);
-        int obstacle = lua_tointeger(L, -1);
+        int obstacle = OBS_TERRAIN;
+        if(lua_isinteger(L, -1)) {
+            obstacle = lua_tointeger(L, -1);
+        }
         hg_set_obstacle(grid, pos, obstacle);
         lua_pop(L, 3);
         i++;
@@ -72,11 +75,11 @@ lhg_pathfinding(lua_State* L) {
     HexGrid *grid = luaL_checkudata(L, 1, MT_NAME);
     int pos1 = luaL_checkinteger(L, 2);
     int pos2 = luaL_checkinteger(L, 3);
-    int camp = IGNORE_OBSTACLE;
+    int ignore_lv = OBS_NONE;
     if(lua_isinteger(L, 4)) {
-        camp = luaL_checkinteger(L, 4);
+        ignore_lv = luaL_checkinteger(L, 4);
     }
-    IntList* path = hg_pathfinding(grid, pos1, pos2, camp);
+    IntList* path = hg_pathfinding(grid, pos1, pos2, ignore_lv);
 
     lua_newtable(L);
     for (int i = 0; i < il_size(path); ++i) {

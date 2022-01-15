@@ -132,19 +132,15 @@ static HexBlock* get_neighbor(HexGrid* grid, HexBlock* block, int dir) {
     }
 }
 
-static inline int unwalkable(HexBlock* block) {
-    return block == NULL || block->obstacle == UNWALKABLE;
+static inline int is_terrain_obs(HexBlock* block) {
+    return block == NULL || block->obstacle == OBS_TERRAIN;
 }
 
-static inline int is_obstacle(HexBlock* block, int camp) {
-    if (unwalkable(block)) {
-        return 1;
+static inline int is_obstacle(HexBlock* block, HexBlock* start, HexBlock* end, int ignore_lv) {
+    if((block == start || block == end) && ignore_lv < OBS_BUILDING) {
+        ignore_lv = OBS_BUILDING; // 普通寻路忽略起点和终点的阻挡
     }
-    if (camp == IGNORE_OBSTACLE || block->obstacle == 0) {
-        return 0;
-    } else {
-        return block->obstacle != camp;
-    }
+    return block->obstacle > ignore_lv;
 }
 
 void hg_init() {
@@ -211,7 +207,7 @@ static void set_area(HexGrid* grid, HexBlock* block, int area) {
     block->area = area;
     for (int dir = 0; dir < NO_DIRECTION; ++dir) {
         HexBlock* neighbor = get_neighbor(grid, block, dir);
-        if (neighbor != NULL && neighbor->area == 0 && !unwalkable(neighbor)) {
+        if (neighbor != NULL && neighbor->area == 0 && !is_terrain_obs(neighbor)) {
             set_area(grid, neighbor, area);
         }
     }
@@ -225,7 +221,7 @@ void hg_update_area(HexGrid* grid) {
     int area = 1;
     for (int i = 0; i < grid->w * grid->h; ++i) {
         HexBlock* block = grid->blocks[i];
-        if (!unwalkable(block) && block->area == 0) {
+        if (!is_terrain_obs(block) && block->area == 0) {
             set_area(grid, block, area++);
         }
     }
@@ -233,16 +229,9 @@ void hg_update_area(HexGrid* grid) {
 
 int hg_get_obstacle(HexGrid* grid, int pos) {
     if (pos < 0 || pos >= grid->w * grid->h) {
-        return UNWALKABLE;
+        return OBS_TERRAIN;
     }
     return grid->blocks[pos]->obstacle;
-}
-
-static inline int dir_obstacle(HexGrid* grid,
-                               HexBlock* block,
-                               int dir,
-                               int camp) {
-    return is_obstacle(get_neighbor(grid, block, dir), camp);
 }
 
 // static int FORCE_DIRS[][4] = {
@@ -268,15 +257,15 @@ static void reset_grid(HexGrid* grid) {
 }
 
 // A-star
-IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int camp) {
+IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int ignore_lv) {
     // DBGprint("pathfinding (%d, %d) => (%d, %d)\n", x1, y1, x2, y2);
     HexBlock* start = grid->blocks[pos2]; // 交换起点终点
     HexBlock* end = grid->blocks[pos1];
 
     il_clear(path);
-    if (start->area != end->area || unwalkable(start) || unwalkable(end)) {
-        DBGprint("no way, start:%d, end:%d, area:%d\n", unwalkable(start),
-                 unwalkable(end), start->area != end->area);
+    if (start->area != end->area || is_terrain_obs(start) || is_terrain_obs(end)) {
+        DBGprint("no way, start:%d, end:%d, area:%d\n", is_terrain_obs(start),
+                 is_terrain_obs(end), start->area != end->area);
         return path;
     }
     if (start == end) {
@@ -308,8 +297,9 @@ IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int camp) {
                 continue;
             }
             if (block->flag == FLAG_INIT) {
-                if (is_obstacle(block, camp)) {
+                if (is_obstacle(block, start, end, ignore_lv)) {
                     block->flag = FLAG_CLOSE;
+                    set_dirty(grid, block);
                 } else {
                     block->gscore = gscore;
                     block->hscore = calc_hscore(block, grid->eb);
@@ -352,7 +342,9 @@ void hg_dump(HexGrid* grid) {
             printf(" ");
         for (int x = 0; x < w; ++x) {
             HexBlock* block = grid->blocks[y * grid->w + x];
-            if (block->obstacle == -1)
+            if (block->obstacle == OBS_BUILDING)
+                printf("@ ");
+            else if (block->obstacle == OBS_TERRAIN)
                 printf("X ");
             else
                 printf("%d ", block->obstacle);
