@@ -53,7 +53,7 @@ NODE_FL_FUNC void nfl_init(NodeFreeList* fl);
 NODE_FL_FUNC void nfl_destroy(NodeFreeList* fl);
 
 // 插入一个节点，这里的 next 是通过 grid 获取到当前的
-NODE_FL_FUNC int nfl_insert(NodeFreeList* fl, int idx, int g, int h);
+NODE_FL_FUNC Node* nfl_insert(NodeFreeList* fl, int idx, int g, int h);
 
 // 移除
 NODE_FL_FUNC Node* nfl_pop(NodeFreeList* fl);

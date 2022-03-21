@@ -39,7 +39,7 @@ Node* nfl_head(NodeFreeList* fl) {
 }
 
 // 从小到大排序插入
-int nfl_insert(NodeFreeList* fl, int pos, int g, int h) {
+Node* nfl_insert(NodeFreeList* fl, int pos, int g, int h) {
     int index;
     if (fl->free_element != -1) {
         index = fl->free_element;
@@ -88,7 +88,7 @@ int nfl_insert(NodeFreeList* fl, int pos, int g, int h) {
         //printf("### prev:%d, cur:%d, index:%d\n", prev, cur, index);
     }
 
-    return index;
+    return node;
 }
 
 Node* nfl_pop(NodeFreeList* fl) {

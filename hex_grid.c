@@ -85,16 +85,24 @@ static inline int is_open(HexBlock* block) {
     return block->flag == FLAG_OPEN;
 }
 
+static inline void link_block(HexGrid* grid, HexBlock* src, HexBlock* dst) {
+    if (src != NULL) {
+        dst->prev_idx = src->idx;
+        dst->gscore = src->gscore + 1;
+    } else {
+        dst->gscore = 0;
+    }
+    dst->node = nfl_insert(grid->open_list, dst->idx, dst->gscore, dst->hscore);
+}
+
 static void add_to_open_list(HexGrid* grid, HexBlock* src, HexBlock* dst) {
     if (dst->flag == FLAG_OPEN || dst->flag == FLAG_CLOSE) {
         return;
     }
     set_dirty(grid, dst);
-    if (src != NULL) {
-        dst->prev_idx = src->idx;
-    }
+    
     dst->flag = FLAG_OPEN;
-    nfl_insert(grid->open_list, dst->idx, dst->gscore, dst->hscore);
+    link_block(grid, src, dst);
 
 #ifdef DEBUG
     int fscore = dst->gscore + dst->hscore;
@@ -279,7 +287,6 @@ IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int ignore_lv) {
     NodeFreeList* open_list = grid->open_list;
     add_to_open_list(grid, NULL, start);
 
-    int gscore = 0;
     while (!nfl_is_empty(open_list)) {
         Node* node = nfl_pop(open_list);
         HexBlock* cur = grid->blocks[node->pos];
@@ -288,9 +295,9 @@ IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int ignore_lv) {
             // end->prev_idx = cur->idx;
             break;
         }
-        gscore++;
-        // printf("current: (%d %d), g:%d, h:%d, f:%d\n", node->idx % grid->w,
-        // node->idx / grid->w, node->g, node->h, node->f);
+        // gscore++;
+        // printf("current: (%d %d) %d, g:%d, h:%d, f:%d\n", node->pos % grid->w,
+        // node->pos / grid->w, node->pos, node->g, node->h, node->f);
         for (int dir = 0; dir < NO_DIRECTION; ++dir) {
             HexBlock* block = get_neighbor(grid, cur, dir);
             if (block == NULL) {
@@ -301,15 +308,15 @@ IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int ignore_lv) {
                     block->flag = FLAG_CLOSE;
                     set_dirty(grid, block);
                 } else {
-                    block->gscore = gscore;
+                    // block->gscore = gscore;
                     block->hscore = calc_hscore(block, grid->eb);
                     add_to_open_list(grid, cur, block);
                 }
-            } else if (block->flag == FLAG_OPEN && block->gscore > gscore + 1) {
+            } else if (block->flag == FLAG_OPEN && block->gscore > cur->gscore + 1) {
+                // printf("update: (%d %d) %d, gscore:%d\n", block->idx % grid->w,
+                // block->idx / grid->w, block->idx, cur->gscore + 1);
                 nfl_remove(grid->open_list, block->node);
-                block->gscore = gscore + 1;
-                nfl_insert(grid->open_list, block->idx, block->gscore,
-                           block->hscore);
+                link_block(grid, cur, block);
             }
         }
     }
