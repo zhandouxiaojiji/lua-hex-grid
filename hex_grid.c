@@ -271,7 +271,7 @@ IntList* hg_pathfinding(HexGrid* grid, int pos1, int pos2, int ignore_lv) {
     HexBlock* end = grid->blocks[pos1];
 
     il_clear(path);
-    if (start->area != end->area || is_terrain_obs(start) || is_terrain_obs(end)) {
+    if (ignore_lv < OBS_TERRAIN && (start->area != end->area || is_terrain_obs(start) || is_terrain_obs(end))) {
         DBGprint("no way, start:%d, end:%d, area:%d\n", is_terrain_obs(start),
                  is_terrain_obs(end), start->area != end->area);
         return path;
